@@ -1,6 +1,7 @@
 //
 // Created by user on 26/10/2023.
 //
+#include <endian.h>
 #include "biased_gen.h"
 
 uint64_t rngstate[4] = {0,1,2,3};
@@ -44,7 +45,7 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
 
 
     num_bins = get_num_bins(block_size);
-    memset((unsigned char *)Oi, 0, num_bins*sizeof(*Oi));
+    memset(Oi, 0, num_bins*sizeof(*Oi));
 
     Ei = 1.0*num_blocks/num_bins;
 
@@ -73,7 +74,6 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
     }
 
     if (chi2_stat > req_chi2stat){
-        free((void *)Oi);
         return;
     }
     while(chi2_stat < req_chi2stat){
@@ -123,6 +123,7 @@ void basic_dist(const unsigned long long* Oi, int block_size,
     unsigned long long i, freq, to_be_written;
     int block_value, num_bins;
     unsigned char *write_ptr;
+    uint32_t block_value_le;
 
     num_bins = get_num_bins(block_size);
     write_ptr = output;
@@ -132,7 +133,8 @@ void basic_dist(const unsigned long long* Oi, int block_size,
     for (block_value = 0; block_value < num_bins && to_be_written > 0; block_value++) {
         freq = Oi[block_value];
         for(i = 0; i < freq && to_be_written > 0; i++) {
-            memcpy(write_ptr, &block_value, block_size);
+            block_value_le = htole32(block_value);
+            memcpy(write_ptr, &block_value_le, block_size);
             write_ptr += block_size;
             to_be_written--;
         }

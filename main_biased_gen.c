@@ -70,13 +70,19 @@ int main(int argc, char *argv[]) {
     if (!file)
         return help(argv[0], "File parameter is mandatory.");
 
-    printf("PARAMS: file %s, size %llu, blocksize %i, chi2 %f, swaps %llu\n",
-           file, size, block_size, chi2, num_swaps);
+    if (!size)
+        return help(argv[0], "File cannot be empty.");
+
+    if (block_size < 1 || block_size > 3)
+        return help(argv[0], "Blocksize can be 1..3 only.");
+
+    printf("PARAMS: file %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu\n",
+           file, size, block_size, get_num_bins(block_size), chi2, num_swaps);
 
     num_blocks = size / block_size;
 
-    reference = malloc(block_size * num_blocks);
-    output = malloc(block_size * num_blocks);
+    reference = malloc(size);
+    output = malloc(size);
     Oi = malloc(get_num_bins(block_size) * sizeof(*Oi));
 
     if (!reference || !output || !Oi) {
