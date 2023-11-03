@@ -64,7 +64,8 @@ int main(int argc, char *argv[]) {
             num_swaps = strtoull(val, &end, 10);
             if (*end || errno == ERANGE)
                 return help(argv[0], "Invalid swaps.");
-        }
+        } else
+                return help(argv[0], "Invalid parameter name.");
     }
 
     if (!file)
