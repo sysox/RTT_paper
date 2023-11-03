@@ -21,19 +21,19 @@ static uint32_t next(void) {
     return (uint32_t)result;                    //changed
 }
 
-static float chi2(float Ei, int num_bins, unsigned long long* Oi){
-    float chi2_stat;
+static double chi2(double Ei, int num_bins, unsigned long long* Oi){
+    double chi2_stat;
     int i;
 
     chi2_stat = 0;
     for (i = 0; i < num_bins; ++i) {
-        chi2_stat += (Oi[i] - Ei)*(Oi[i] - Ei)/Ei;
+        chi2_stat += ((double)Oi[i] - Ei)*((double)Oi[i] - Ei)/Ei;
     }
     return chi2_stat;
 }
 void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_blocks, unsigned long long* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
-    float Ei, chi2_stat, current_value, tmp;
+    double Ei, chi2_stat, current_value, tmp;
     int num_bins, i, floor_Ei, freq, sum, idx1, idx2;
 
 
