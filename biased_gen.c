@@ -26,7 +26,7 @@ float chi2(float Ei, int num_bins, int* Oi){
     int i;
 
     chi2_stat = 0;
-    for (int i = 0; i < num_bins; ++i) {
+    for (i = 0; i < num_bins; ++i) {
         chi2_stat += (Oi[i] - Ei)*(Oi[i] - Ei)/Ei;
     }
     return chi2_stat;
@@ -34,7 +34,7 @@ float chi2(float Ei, int num_bins, int* Oi){
 void gen_freqs(double req_chi2stat, int block_size, int num_blocks, int* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     float Ei, chi2_stat, current_value, tmp;
-    int num_bins, tmp_Oi, i, floor_Ei, freq, sum, idx1, idx2;
+    int num_bins, i, floor_Ei, freq, sum, idx1, idx2;
 
 
     num_bins = (1<<(block_size*8));
@@ -117,6 +117,7 @@ void basic_dist(int* Oi, int block_size, int num_blocks, unsigned char* output){
     int num_bins, i;
     unsigned char *write_ptr;
 
+    num_bins = (1<<(block_size*8));
     write_ptr = output;
     to_be_written = num_blocks;
 
@@ -143,8 +144,7 @@ void basic_dist(int* Oi, int block_size, int num_blocks, unsigned char* output){
 //    }
 }
 void shuffling(unsigned char* src, int block_size, int num_blocks, int num_swaps, unsigned char* output){
-    unsigned int block_value, i, rep, idx1, idx2;
-    unsigned char *write_ptr;
+    unsigned int i, idx1, idx2;
     unsigned char tmp[10];
 
     //copy unsuffled dist
@@ -171,4 +171,3 @@ void random_selection(unsigned char* src, int block_size, int num_blocks, unsign
         write_ptr += block_size;
     }
 }
-
