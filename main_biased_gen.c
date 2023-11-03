@@ -29,9 +29,9 @@ static int help(const char *arg0, const char *err) {
 
 int main(int argc, char *argv[]) {
     unsigned char *output, *reference;
-    int i, num_blocks, block_size, num_swaps, *Oi, num_bins;
+    int i, block_size, num_bins;
     char opt[129], val[129], *file, *end;
-    unsigned long long size;
+    unsigned long long size, num_blocks, num_swaps, *Oi;
     double chi2;
     FILE *fp;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
             if (*end || errno == ERANGE)
                 return help(argv[0], "Invalid chi2.");
         } else if (!strcmp(opt, "swaps")) {
-            num_swaps = strtol(val, &end, 10);
+            num_swaps = strtoull(val, &end, 10);
             if (*end || errno == ERANGE)
                 return help(argv[0], "Invalid swaps.");
         }
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     if (!file)
         return help(argv[0], "File parameter is mandatory.");
 
-    printf("PARAMS: file %s, size %llu, blocksize %i, chi2 %f, swaps %i\n",
+    printf("PARAMS: file %s, size %llu, blocksize %i, chi2 %f, swaps %llu\n",
            file, size, block_size, chi2, num_swaps);
 
     num_blocks = size / block_size;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     reference = malloc(block_size * num_blocks);
     output = malloc(block_size * num_blocks);
-    Oi = malloc(num_bins * sizeof(int));
+    Oi = malloc(num_bins * sizeof(*Oi));
 
     if (!reference || !output || !Oi) {
         printf("Cannot allocate memory.\n");

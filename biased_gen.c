@@ -9,7 +9,7 @@ static inline uint64_t rotl(const uint64_t x, int k) {
 }
 
 // Returns a Uint64 random number => changed to Uint32
-uint32_t next(void) {
+static uint32_t next(void) {
     const uint64_t result = rotl(rngstate[0] + rngstate[3], 23) + rngstate[0];
     const uint64_t t = rngstate[1] << 17;
     rngstate[2] ^= rngstate[0];
@@ -21,7 +21,7 @@ uint32_t next(void) {
     return (uint32_t)result;                    //changed
 }
 
-float chi2(float Ei, int num_bins, int* Oi){
+static float chi2(float Ei, int num_bins, unsigned long long* Oi){
     float chi2_stat;
     int i;
 
@@ -31,14 +31,14 @@ float chi2(float Ei, int num_bins, int* Oi){
     }
     return chi2_stat;
 }
-void gen_freqs(double req_chi2stat, int block_size, int num_blocks, int* Oi){
+void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_blocks, unsigned long long* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     float Ei, chi2_stat, current_value, tmp;
     int num_bins, i, floor_Ei, freq, sum, idx1, idx2;
 
 
     num_bins = (1<<(block_size*8));
-    memset((unsigned char *)Oi, 0, num_bins*sizeof(int));
+    memset((unsigned char *)Oi, 0, num_bins*sizeof(*Oi));
 
     Ei = 1.0*num_blocks/num_bins;
 
@@ -112,7 +112,8 @@ void gen_freqs(double req_chi2stat, int block_size, int num_blocks, int* Oi){
     printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
 }
 
-void basic_dist(int* Oi, int block_size, int num_blocks, unsigned char* output){
+void basic_dist(const unsigned long long* Oi, int block_size,
+                unsigned long long num_blocks, unsigned char* output){
     unsigned int block_value, freq, to_be_written;
     int num_bins, i;
     unsigned char *write_ptr;
@@ -143,7 +144,8 @@ void basic_dist(int* Oi, int block_size, int num_blocks, unsigned char* output){
 //        to_be_written--;
 //    }
 }
-void shuffling(unsigned char* src, int block_size, int num_blocks, int num_swaps, unsigned char* output){
+void shuffling(const unsigned char* src, int block_size, unsigned long long num_blocks,
+               unsigned long long num_swaps, unsigned char* output){
     unsigned int i, idx1, idx2;
     unsigned char tmp[10];
 
@@ -160,7 +162,8 @@ void shuffling(unsigned char* src, int block_size, int num_blocks, int num_swaps
        memcpy(output + idx2*block_size, tmp, block_size);
     }
 }
-void random_selection(unsigned char* src, int block_size, int num_blocks, unsigned char* output){
+void random_selection(const unsigned char* src, int block_size,
+                      unsigned long long num_blocks, unsigned char* output){
     unsigned int idx, i;
     unsigned char *write_ptr;
 
