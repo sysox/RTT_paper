@@ -34,7 +34,8 @@ static double chi2(double Ei, int num_bins, unsigned long long* Oi){
 void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_blocks, unsigned long long* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
-    int num_bins, i, floor_Ei, freq, sum, idx1, idx2;
+    int num_bins, i, floor_Ei, freq, idx1, idx2;
+    unsigned long long sum;
 
 
     num_bins = (1<<(block_size*8));
@@ -63,7 +64,7 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
         sum += Oi[i];
     }
     if (sum != num_blocks){
-        printf("%d != number of blocks", sum);
+        printf("%llu != number of blocks", sum);
     }
 
     if (chi2_stat > req_chi2stat){
@@ -107,15 +108,15 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
         sum += Oi[i];
     }
     if (sum != num_blocks){
-        printf("%d != number of blocks", sum);
+        printf("%llu != number of blocks", sum);
     }
     printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
 }
 
 void basic_dist(const unsigned long long* Oi, int block_size,
                 unsigned long long num_blocks, unsigned char* output){
-    unsigned int block_value, freq, to_be_written;
-    int num_bins, i;
+    unsigned long long i, freq, to_be_written;
+    int block_value, num_bins;
     unsigned char *write_ptr;
 
     num_bins = (1<<(block_size*8));
@@ -123,17 +124,13 @@ void basic_dist(const unsigned long long* Oi, int block_size,
     to_be_written = num_blocks;
 
     //    not shuffled with given probs
-    for (block_value = 0; block_value < num_bins; block_value++) {
+    for (block_value = 0; block_value < num_bins && to_be_written > 0; block_value++) {
         freq = Oi[block_value];
-        for(i = 0; i < freq; i++) {
+        for(i = 0; i < freq && to_be_written > 0; i++) {
             memcpy(write_ptr, &block_value, block_size);
             write_ptr += block_size;
             to_be_written--;
-            if (to_be_written <= 0)
-                break;
         }
-        if (to_be_written <= 0)
-            break;
     }
     //    according to rounding generate RANDOMLY rest of blocks
 //    while(to_be_written > 0)
@@ -146,7 +143,8 @@ void basic_dist(const unsigned long long* Oi, int block_size,
 }
 void shuffling(const unsigned char* src, int block_size, unsigned long long num_blocks,
                unsigned long long num_swaps, unsigned char* output){
-    unsigned int i, idx1, idx2;
+    unsigned int idx1, idx2;
+    unsigned long long i;
     unsigned char tmp[10];
 
     //copy unsuffled dist
@@ -164,7 +162,8 @@ void shuffling(const unsigned char* src, int block_size, unsigned long long num_
 }
 void random_selection(const unsigned char* src, int block_size,
                       unsigned long long num_blocks, unsigned char* output){
-    unsigned int idx, i;
+    unsigned int idx;
+    unsigned long long i;
     unsigned char *write_ptr;
 
     write_ptr = output;
