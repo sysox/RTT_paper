@@ -31,6 +31,11 @@ static double chi2(double Ei, int num_bins, unsigned long long* Oi){
     }
     return chi2_stat;
 }
+
+int get_num_bins(int block_size) {
+    return 1 << (block_size * 8);
+}
+
 void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_blocks, unsigned long long* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
@@ -38,7 +43,7 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
     unsigned long long sum;
 
 
-    num_bins = (1<<(block_size*8));
+    num_bins = get_num_bins(block_size);
     memset((unsigned char *)Oi, 0, num_bins*sizeof(*Oi));
 
     Ei = 1.0*num_blocks/num_bins;
@@ -119,7 +124,7 @@ void basic_dist(const unsigned long long* Oi, int block_size,
     int block_value, num_bins;
     unsigned char *write_ptr;
 
-    num_bins = (1<<(block_size*8));
+    num_bins = get_num_bins(block_size);
     write_ptr = output;
     to_be_written = num_blocks;
 

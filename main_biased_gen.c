@@ -29,7 +29,7 @@ static int help(const char *arg0, const char *err) {
 
 int main(int argc, char *argv[]) {
     unsigned char *output, *reference;
-    int i, block_size, num_bins;
+    int i, block_size;
     char opt[129], val[129], *file, *end;
     unsigned long long size, num_blocks, num_swaps, *Oi;
     double chi2;
@@ -74,18 +74,17 @@ int main(int argc, char *argv[]) {
            file, size, block_size, chi2, num_swaps);
 
     num_blocks = size / block_size;
-    num_bins = 1 << (block_size * 8);
 
     reference = malloc(block_size * num_blocks);
     output = malloc(block_size * num_blocks);
-    Oi = malloc(num_bins * sizeof(*Oi));
+    Oi = malloc(get_num_bins(block_size) * sizeof(*Oi));
 
     if (!reference || !output || !Oi) {
         printf("Cannot allocate memory.\n");
         return EXIT_FAILURE;
     }
 
-    gen_freqs(1000, block_size, num_blocks, Oi);
+    gen_freqs(chi2, block_size, num_blocks, Oi);
 
     basic_dist(Oi, block_size, num_blocks, reference);
 //    print_array(reference, num_blocks*block_size);
