@@ -23,7 +23,7 @@ void print_array(unsigned char* array, int size){
 static int help(const char *arg0, const char *err) {
     if (err)
         printf("%s\n\n", err);
-    printf("Use: %s --file=<output> [--size=<MBytes>] --chi2=<num> --swaps=<num> [--blocksize=<num>]\n", arg0);
+    printf("Use: %s --file=<output> [--size=<MBytes>] [--chi2=<num>] [--swaps=<num>] [--blocksize=<num>] [--seed=<num>]\n", arg0);
     return EXIT_FAILURE;
 }
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     unsigned char *output, *reference;
     int i, block_size;
     char opt[129], val[129], *file, *end;
-    unsigned long long size, num_blocks, num_swaps, *Oi;
+    unsigned long long size, num_blocks, num_swaps, *Oi, seed;
     double chi2;
     FILE *fp;
 
@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     num_swaps = 0;
     chi2 = 1000.;
     size = 400 * 1024 *1024;
+    seed = 0;
 
     for (i = 1; i < argc; i++) {
         if (sscanf(argv[i], "--%128[^=]=%128s", opt, val) != 2)
@@ -64,6 +65,10 @@ int main(int argc, char *argv[]) {
             num_swaps = strtoull(val, &end, 10);
             if (*end || errno == ERANGE)
                 return help(argv[0], "Invalid swaps.");
+        } else if (!strcmp(opt, "seed")) {
+            seed = strtoull(val, &end, 10);
+            if (*end || errno == ERANGE)
+                return help(argv[0], "Invalid seed.");
         } else
                 return help(argv[0], "Invalid parameter name.");
     }
@@ -77,8 +82,8 @@ int main(int argc, char *argv[]) {
     if (block_size < 1 || block_size > 3)
         return help(argv[0], "Blocksize can be 1..3 only.");
 
-    printf("PARAMS: file %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu\n",
-           file, size, block_size, get_num_bins(block_size), chi2, num_swaps);
+    printf("PARAMS: file %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu, seed %llu\n",
+           file, size, block_size, get_num_bins(block_size), chi2, num_swaps, seed);
 
     num_blocks = size / block_size;
 
@@ -90,6 +95,8 @@ int main(int argc, char *argv[]) {
         printf("Cannot allocate memory.\n");
         return EXIT_FAILURE;
     }
+
+    set_rng_seed((uint64_t)seed);
 
     gen_freqs(chi2, block_size, num_blocks, Oi);
 
