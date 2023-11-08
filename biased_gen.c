@@ -15,7 +15,7 @@ static inline uint64_t rotl(const uint64_t x, int k) {
 }
 
 // Returns a Uint64 random number => changed to Uint32
-static uint32_t next(void) {
+uint32_t next(void) {
     const uint64_t result = rotl(rngstate[0] + rngstate[3], 23) + rngstate[0];
     const uint64_t t = rngstate[1] << 17;
     rngstate[2] ^= rngstate[0];
@@ -38,18 +38,18 @@ static double chi2(double Ei, int num_bins, unsigned long long* Oi){
     return chi2_stat;
 }
 
-int get_num_bins(int block_size) {
-    return 1 << (block_size * 8);
+int get_num_bins(int block_bit_size) {
+    return 1 << block_bit_size;
 }
 
-void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_blocks, unsigned long long* Oi){
+void gen_freqs(double req_chi2stat, int num_freqs, unsigned long long num_blocks, unsigned long long* Oi){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
     int num_bins, i, floor_Ei, freq, idx1, idx2;
     unsigned long long sum;
 
 
-    num_bins = get_num_bins(block_size);
+    num_bins = num_freqs;
     memset(Oi, 0, num_bins*sizeof(*Oi));
 
     Ei = 1.0*num_blocks/num_bins;
@@ -75,7 +75,8 @@ void gen_freqs(double req_chi2stat, int block_size, unsigned long long num_block
         sum += Oi[i];
     }
     if (sum != num_blocks){
-        printf("%llu != number of blocks", sum);
+        Oi[0] += num_blocks - sum;
+//        printf("%llu != number of blocks %llu\n", sum, num_blocks);
     }
 
     if (chi2_stat > req_chi2stat){
