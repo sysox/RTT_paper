@@ -8,20 +8,19 @@
 #include <stdlib.h>
 
 
-#include "../markov_chain_RNG.h"
+#include "markov_chain_RNG.h"
 
 #define block_bit_size 3
-#define dim 10
+#define dim 4
 
 int main() {
-    float **T, Oi_probs[dim], req_chi2stat;
+    double **T, Oi_probs[dim] = {0.1, 0.2, 0.6, 0.1}, req_chi2stat;
     int  num_blocks;
     unsigned long long Oi_freqs[dim];
     num_blocks = 1000;
     req_chi2stat = 10;
 
     T = allocate(dim);
-    gen_global_probs(req_chi2stat, dim, num_blocks, Oi_freqs, Oi_probs);
     stochastic_matrix(Oi_probs, dim, T);
 
     return 0;

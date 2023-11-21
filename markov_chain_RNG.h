@@ -9,13 +9,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "biased_gen.h"
 
-float** allocate(int dim);
-void print_vec(float** T, int dim);
-void print_mat(float* T, int dim);
 
-void gen_global_probs(double req_chi2stat, int num_freqs, unsigned long long num_blocks, unsigned long long* Oi_freqs, float* Oi_probs);
-void  stochastic_matrix(float *p_vec, int dim, float **T);
+double** allocate(int dim);
+void print_vec(double *T, int dim);
+void print_mat(double **T, int dim);
+
+void histfreqs_to_probs(const long long int* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs);
+void stochastic_matrix(double *p_vec, int dim, double **T);
 
 #endif //RTT_UNIFORMITY_TESTING_MASRKOV_CHAIN_RNG_H

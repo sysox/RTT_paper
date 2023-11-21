@@ -2,8 +2,9 @@
 // Created by user on 09/11/2023.
 //
 #include "generators.h"
-//***************************************************  utils ********************************************************
-void print_bit_array(unsigned char* array, unsigned long long out_byte_size){
+
+///////////////////////////////////////// utils /////////////////////////////////////////
+void print_bitarray(unsigned char* array, unsigned long long out_byte_size){
     int i, j;
     for(i = 0; i < out_byte_size; i++){
         for(j = 0; j < 8; j++){
@@ -11,6 +12,7 @@ void print_bit_array(unsigned char* array, unsigned long long out_byte_size){
         }
         printf("|");
     }
+    printf("\n");
 }
 void print_array(uint32_t* array, unsigned long long out_byte_size){
     int i, j;
@@ -19,14 +21,29 @@ void print_array(uint32_t* array, unsigned long long out_byte_size){
     }
     printf("\n");
 }
-
 void swap(uint32_t* a, uint32_t* b){
     uint32_t tmp;
     tmp = *a;
     *a = *b;
     *b = tmp;
 }
-//*************************************************** XOR shift generators ********************************************************
+double max(double v1, double v2){
+    if (v1 >= v2 ){
+        return v1;
+    }
+    else{
+        return v2;
+    }
+}
+double min(double v1, double v2){
+    if (v1 <= v2 ){
+        return v1;
+    }
+    else{
+        return v2;
+    }
+}
+///////////////////////////////////////// XOR shift generators /////////////////////////////////////////
 uint32_t xorshift32_state = 1;
 /* The state must be initialized to non-zero */
 void seed_xorshift32(uint32_t seed){
@@ -86,7 +103,7 @@ uint32_t xorshift128()
     return xorshift128_state[3];
 }
 
-//***************************************************  common generators (single random value) ********************************************************
+/////////////////////////////////////////  common generators (single random value) /////////////////////////////////////////
 uint64_t rand_range(uint64_t a, uint64_t b){
     // returns integer values in [a, b) i.e. except b
     uint64_t mod ;
@@ -128,7 +145,7 @@ int multinomial_lincom(float* probs, int size, uint64_t scale_factor){
         }
     }
 }
-//***************************************************  common generators(more random values) ********************************************************
+/////////////////////////////////////////  common generators(more random values) /////////////////////////////////////////
 void concatenate(const uint32_t* values, unsigned long long num_values, int value_bit_size, unsigned char* output){
     // takes 32 bit values and  concate them (value_bit_size least significant bits) to output
     // values[] = {2, 1, 5, 7, ... } value_bit_size = 3
@@ -149,7 +166,7 @@ void concatenate(const uint32_t* values, unsigned long long num_values, int valu
         write_ptr[0] ^= block_value_le << byte_shift;
         bits_written += value_bit_size;
     }
-    print_bit_array(output, out_byte_size + 2);
+//    print_bitarray(output, out_byte_size + 2);
 }
 void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_values,
                         unsigned long long hist_size, uint32_t* output_values) {
@@ -185,20 +202,130 @@ void shuffling(uint32_t* values, unsigned long long num_values, unsigned long lo
         swap(values + idx1, values + idx2);
     }
 }
-void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values,
-                      int hist_size, int value_bit_size, int num_blocks, unsigned char* output){
-    int i, num_values;
-    uint32_t* values;
+void random_sample(const uint32_t* values, unsigned long long num_values, uint32_t* sample, int sample_size){
+    unsigned int idx;
+    unsigned long long i;
 
-    num_values = 0;
-    for(i = 0; i < hist_size; i++){
-        num_values += hist_freqs[i];
+    for (i = 0; i < sample_size; i++) {
+        idx = xorshift64() % num_values;                    // random block from
+        sample[i] = values[idx];
     }
+}
+
+void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hist_size,
+                 int value_bit_size, unsigned char* output, int num_values, int swaps){
+    int i, num_hist_values;
+    uint32_t *values, *sample;
+
+    num_hist_values = 0;
+    for(i = 0; i < hist_size; i++){
+        num_hist_values += hist_freqs[i];
+    }
+
     values = (uint32_t*) malloc(num_values*sizeof(uint32_t));
-    multinomial_clusters(hist_freqs, hist_values, hist_size, values);
-    concatenate(values, num_values, value_bit_size, output);
+    if (swaps > 0) {
+        multinomial_clusters(hist_freqs, hist_values, hist_size, values);
+        shuffling(values, num_values, swaps);
+        concatenate(values, num_values, value_bit_size, output);
+    } else{
+        sample = (uint32_t*) malloc(num_values*sizeof(uint32_t));
+        multinomial_clusters(hist_freqs, hist_values, hist_size, values);
+        print_array(values, num_hist_values);
+        random_sample(values, num_hist_values, sample, num_values);
+        concatenate(sample, num_values, value_bit_size, output);
+        free( (void*) sample);
+    }
+
     free((void *)values);
 }
+
+/////////////////////////////////////////  biased RNG /////////////////////////////////////////
+void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, unsigned long long* Oi_freqs){
+    // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
+    double Ei, chi2_stat, current_value, tmp;
+    int num_bins, i, floor_Ei, freq, idx1, idx2;
+    unsigned long long sum, n;
+    unsigned long long* Oi;
+
+
+    num_bins = hist_size;
+    n = freq_sum;
+    Oi = Oi_freqs;
+
+    memset(Oi, 0, num_bins*sizeof(*Oi_freqs));
+    Ei = 1.0*n/num_bins;
+
+    // basic initial setting with minimum Chi2stat
+    floor_Ei = (int)Ei;
+    freq = 1.0*(Ei - floor_Ei)*num_bins;
+    chi2_stat = 0;
+    for(i = 0; i < freq; i++ ){
+        Oi[i] =  floor_Ei + 1;
+    }
+    for(i = freq; i < num_bins; i++ ){
+        Oi[i] =  floor_Ei ;
+    }
+
+    chi2_stat += ( floor_Ei + 1 - Ei )*( floor_Ei + 1 - Ei )/Ei*freq;
+    chi2_stat += ( floor_Ei - Ei)*( floor_Ei - Ei)/Ei*(num_bins-freq);
+
+    //testing whether sum of Oi == number of blocks!
+    sum = 0;
+    for(i = 0; i < num_bins; i++)
+    {
+        sum += Oi[i];
+    }
+    if (sum != n){
+        Oi[0] += n - sum;
+//        printf("%llu != number of blocks %llu\n", sum, num_blocks);
+    }
+
+    if (chi2_stat > chi2stat){
+        return;
+    }
+    while(chi2_stat < chi2stat){
+        idx1 = xorshift64() % num_bins;
+        idx2 = xorshift64() % num_bins;
+        current_value = ( Oi[idx1] - Ei )*(  Oi[idx1] - Ei )/Ei + ( Oi[idx2] - Ei )*(  Oi[idx2] - Ei )/Ei;
+        tmp = ( Oi[idx1] - 1 - Ei )*(  Oi[idx1] - 1 - Ei )/Ei + ( Oi[idx2] + 1 - Ei )*(  Oi[idx2] + 1 - Ei )/Ei;
+        if(tmp > current_value)
+        {
+            if ((Oi[idx1] <= 0) || (Oi[idx2] >= n))
+                continue;
+            Oi[idx1]--;
+            Oi[idx2]++;
+            chi2_stat += tmp - current_value;
+//            printf("%f vs recomputed =%f\n", chi2_stat, chi2(Ei, num_bins, Oi));
+        }
+        else{
+            tmp = ( Oi[idx1] + 1 - Ei )*(  Oi[idx1] + 1 - Ei )/Ei + ( Oi[idx2] - 1 - Ei )*(  Oi[idx2] - 1 - Ei )/Ei;
+            if(tmp > current_value)
+            {
+                if ((Oi[idx2] <= 0) || (Oi[idx1] >= n))
+                    continue;
+                Oi[idx1]++;
+                Oi[idx2]--;
+                chi2_stat += tmp - current_value;
+//                printf("%f vs recomputed =%f\n", chi2_stat, chi2(Ei, num_bins, Oi));
+            }
+        }
+
+    }
+
+
+    //testing whether sum of Oi == number of blocks!
+    sum = 0;
+    for(i = 0; i < num_bins; i++)
+    {
+        sum += Oi[i];
+//        printf("%lli ", Oi[i]);
+    }
+    if (sum != n){
+        printf("%llu != number of blocks", sum);
+    }
+    //printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
+}
+
 
 //float* array_from_interval(float a, float b, unsigned long long map_range, int (*RNG) (void), float* array, int size){
 //    int mod, i;

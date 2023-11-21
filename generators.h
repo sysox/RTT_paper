@@ -11,7 +11,7 @@
 #include <string.h>
 #include <time.h>
 
-void print_bitarray(unsigned char* array, int out_byte_size);
+void print_bitarray(unsigned char* array, unsigned long long out_byte_size);
 void print_array(uint32_t* array, unsigned long long out_byte_size);
 
 
@@ -35,8 +35,16 @@ void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_value
                         unsigned long long hist_size, uint32_t* output_values);
 void swap(uint32_t* a, uint32_t* b);
 void shuffling(uint32_t* values, unsigned long long num_values, unsigned long long num_swaps);
-void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values,
-                 int hist_size, int value_bit_size, int num_blocks, unsigned char* output);
+void random_sample(const uint32_t* values, unsigned long long num_values, uint32_t* sample, int sample_size);
+void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hist_size,
+                 int value_bit_size, unsigned char* output, int num_values, int swaps);
+
+void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum,
+                   unsigned long long* Oi_freqs);
+
+void gen_global_probs(double chi2stat, int hist_size, unsigned long long freq_sum,
+                      unsigned long long* Oi_freqs, double* Oi_probs);
+//void stochastic_matrix(float *p_vec, int dim, float **T);
 
 
 #endif //RTT_UNIFORMITY_TESTING_GENERATORS_H
