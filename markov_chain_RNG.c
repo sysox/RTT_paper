@@ -22,14 +22,7 @@ float min(float v1, float v2){
         return v2;
     }
 }
-float rand_interval(float a, float b, int map_range){
-    int mod ;
-    float r;
-    mod = (b - a)*map_range;
-    r = 1.0 * (next() % mod) / map_range;
-    r += a;
-    return r;
-}
+
 float** allocate(int dim){
 
     float **array;

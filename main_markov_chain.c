@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 
-#include "TODO/biased_gen_bits.h"
+#include "../markov_chain_RNG.h"
 
 #define block_bit_size 3
 #define dim 10
