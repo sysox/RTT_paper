@@ -34,8 +34,8 @@ void print_mat(double ** T, int dim){
     fflush(stdin);
 }
 void histfreqs_to_probs(const long long int* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs){
-    int num_bins, i;
-    for(i = 0; i < num_bins; i++)
+    int i;
+    for(i = 0; i < hist_size; i++)
     {
         Oi_probs[i] =  1.0 *hist_freqs[i] / freqs_sum;
     }
@@ -83,20 +83,16 @@ void  stochastic_matrix(double *x_probs, int dim, double **T){
      *      max(-T_{i, k}, -1 +T_{i, l})       <= delta_1 <= min(T_{i, l}, 1-T_{i, k})
      *      -x_j/x_i*min(T_{j, l}, 1-T_{j, k}) <= delta_1 <= -x_j/x_i*max(-T_{j, k}, -1 +T_{j, l})      - OK
      */
-    for(iter = 0; iter < 20; iter++){
-        i = xorshift32() % dim;
-        j = (i + xorshift32() % (dim - 1) + 1) % dim;     // random but different than j
+    for(iter = 0; iter < 16; iter++){
+        k = i = xorshift32() % dim;
+        l = j = (i + xorshift32() % (dim - 1) + 1) % dim;     // random but different than j
         if ( (x_probs[i] == 0) || (x_probs[j] == 0))
         {
 //            printf("%f,%f ", x_probs[i], x_probs[j]);
             continue;
         }
 
-        k = xorshift32() % dim;
-        l = (k + xorshift32() % (dim - 1) + 1) % dim;      // random but different than k
 
-        k = i;
-        l = j;
 
 //        *      max(-T_{i, k}, -1 +T_{i, l})       <= delta_1 <= min(T_{i, l}, 1-T_{i, k})
 //        *      -x_j/x_i*min(T_{j, l}, 1-T_{j, k}) <= delta_1 <= -x_j/x_i*max(-T_{j, k}, -1 +T_{j, l})
