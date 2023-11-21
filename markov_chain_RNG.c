@@ -85,7 +85,7 @@ void  stochastic_matrix(double *x_probs, int dim, double **T){
      */
     for(iter = 0; iter < 16; iter++){
         k = i = xorshift32() % dim;
-        l = j = (i + xorshift32() % (dim - 1) + 1) % dim;     // random but different than j
+        l = j = (i + xorshift32() % (dim - 1) + 1) % dim;     // random but different than i
         if ( (x_probs[i] == 0) || (x_probs[j] == 0))
         {
 //            printf("%f,%f ", x_probs[i], x_probs[j]);
@@ -121,13 +121,13 @@ void  stochastic_matrix(double *x_probs, int dim, double **T){
     print_mat(T, dim);
 
     //test xT ~ x
-//    for(i = 0; i < dim; i++){
-//        sum = 0;
-//        for(j= 0; j < dim; j++){
-//            sum += x_probs[i]*T[i][j];
-//        }
-//        if (fabs(sum - x_probs[i]) > 0.001 ){
-//            printf("%f != %f, column = %i \n", sum, x_probs[i], i);
-//        }
-//    }
+    for(i = 0; i < dim; i++){
+        sum = 0;
+        for(j= 0; j < dim; j++){
+            sum += x_probs[i]*T[i][j];
+        }
+        if (fabs(sum - x_probs[i]) > 0.001 ){
+            printf("%f != %f, column = %i \n", sum, x_probs[i], i);
+        }
+    }
 }
