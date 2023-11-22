@@ -5,9 +5,9 @@
 
 
 ///////////////////////////////////////// utils /////////////////////////////////////////
-void print_bitarray(unsigned char* array, unsigned long long out_byte_size){
+void print_bitarray(unsigned char* array, unsigned long long size){
     int i, j;
-    for(i = 0; i < out_byte_size; i++){
+    for(i = 0; i < size; i++){
         for(j = 0; j < 8; j++){
             printf("%i", (array[i] >> j) & 1 );
         }
@@ -15,9 +15,9 @@ void print_bitarray(unsigned char* array, unsigned long long out_byte_size){
     }
     printf("\n");
 }
-void print_array(uint32_t* array, unsigned long long out_byte_size){
+void print_array(uint32_t* array, unsigned long long size){
     int i, j;
-    for(i = 0; i < out_byte_size; i++){
+    for(i = 0; i < size; i++){
         printf("%i ",array[i]);
     }
     printf("\n");
@@ -28,22 +28,8 @@ void swap(uint32_t* a, uint32_t* b){
     *a = *b;
     *b = tmp;
 }
-double max(double v1, double v2){
-    if (v1 >= v2 ){
-        return v1;
-    }
-    else{
-        return v2;
-    }
-}
-double min(double v1, double v2){
-    if (v1 <= v2 ){
-        return v1;
-    }
-    else{
-        return v2;
-    }
-}
+
+
 ///////////////////////////////////////// XOR shift generators /////////////////////////////////////////
 uint32_t xorshift32_state = 1;
 /* The state must be initialized to non-zero */
@@ -104,6 +90,7 @@ uint32_t xorshift128()
     return xorshift128_state[3];
 }
 
+
 /////////////////////////////////////////  common generators (single random value) /////////////////////////////////////////
 uint64_t rand_range(uint64_t a, uint64_t b){
     // returns integer values in [a, b) i.e. except b
@@ -117,21 +104,27 @@ uint64_t rand_whole_range(uint64_t a, uint64_t b){
     mod = b - a + 1;
     return xorshift64() % mod + a;
 }
-double rand_double_range(double a, double b, uint64_t scale_factor){
+double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom){
     // returns double values in [a, b)
-    // scale factor represents "granularity" or "precision" of returned values
+    // pool_size - number of doubles possibly generated from a, b
+    // zoom - integer is generated from zoomed interval and then values is transformed back (zoom out)
+
     int mod;
     double r;
     uint64_t A, B;
-    if (scale_factor <= 0){
-        scale_factor = 1;
+
+    // [a, b) is mapped to [A, B) with size poolsize i.e. B-1-A = pool_size
+    // B-1-A = b*zoom - a*zoom - 1 = pool_size      =>   zoom = (pool_size + 1)/ (b-a)
+    if (zoom <= 0){
+        zoom = (pool_size + 1)/ (b-a);
     }
-    A = a*scale_factor;
-    B = b*scale_factor;
-    r = 1.0 * rand_range(0, B - A) / scale_factor;
+
+    A = a*zoom;
+    B = b*zoom;
+    r = 1.0 * rand_range(0, B - A) / zoom;
     return r + a;
 }
-int multinomial_lincom(double* probs, int size, uint64_t scale_factor){
+int multinomial_lincom(double* probs, int size, uint64_t scale_factor, uint64_t zoom){
     // for array of probabilities (with sum = 1) of some events
     // return integer (index) of some event
     // the algorithm generate value r from [0, 1] and
@@ -139,7 +132,7 @@ int multinomial_lincom(double* probs, int size, uint64_t scale_factor){
 
     int i = 0;
     float r;
-    r = rand_double_range(0, 1, scale_factor);
+    r = rand_double_range(0, 1, scale_factor, zoom);
     for(i = 0; i < size; i++) {
         if ( (r -= probs[i]) < 0){
             return i;
@@ -214,7 +207,7 @@ void random_sample(const uint32_t* values, unsigned long long num_values, uint32
 }
 
 void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hist_size,
-                 int value_bit_size, unsigned char* output, int num_values, int swaps){
+                 int value_bit_size, unsigned char* output, int num_values, int num_swaps){
     int i, num_hist_values;
     uint32_t *values, *sample;
 
@@ -224,9 +217,9 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
     }
 
     values = (uint32_t*) malloc(num_values*sizeof(uint32_t));
-    if (swaps > 0) {
+    if (num_swaps > 0) {
         multinomial_clusters(hist_freqs, hist_values, hist_size, values);
-        shuffling(values, num_values, swaps);
+        shuffling(values, num_values, num_swaps);
         concatenate(values, num_values, value_bit_size, output);
     } else{
         sample = (uint32_t*) malloc(num_values*sizeof(uint32_t));

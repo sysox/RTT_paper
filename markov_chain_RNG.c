@@ -110,7 +110,7 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
         if (maximum - minimum < 0.00001){
             continue;
         }
-        delta1 = rand_double_range(minimum, maximum, 1000);
+        delta1 = rand_double_range(minimum, maximum, dim*10000, 0);
         delta2 = delta1 / xji_ratio;
 
         T[i][k] += delta1;
@@ -120,7 +120,7 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
     }
 
     //    print_vec(x_probs, dim);
-    print_mat(T, dim);
+//    print_mat(T, dim);
 
     //test xT ~ x
     for(i = 0; i < dim; i++){
@@ -141,7 +141,7 @@ void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_va
 
     for(i = 0; i < seq_size; i++){
         output_chain_values[i] = state_values[index];
-        index = multinomial_lincom(stochastic_mat[index], dim, scale_factor);
+        index = multinomial_lincom(stochastic_mat[index], dim, scale_factor, 0);
     }
 }
 
@@ -164,16 +164,16 @@ void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char*
 
 
     Chi2_to_freqs(chi2stat, dim, chain_size, Oi_freqs);
-    print_array(Oi_freqs, dim);
     histfreqs_to_probs(Oi_freqs, dim, chain_size, Oi_probs);
 
     num_iters = 10*dim*dim;
     stochastic_matrix(Oi_probs, dim, stochastic_mat, num_iters);
 
-    scale_factor = dim*100;
+    scale_factor = dim*10000;
     for(i = 0; i < dim; i++) {
-        output_chain_values[i] = i;
+        state_values[i] = i;
     }
+
     markov_chain_seq(stochastic_mat, dim, state_values, chain_size, output_chain_values, scale_factor);
     concatenate(output_chain_values, chain_size, value_bit_size, output);
 
