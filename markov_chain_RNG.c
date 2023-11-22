@@ -40,15 +40,17 @@ void histfreqs_to_probs(const long long int* hist_freqs, int hist_size, long lon
         Oi_probs[i] =  1.0 *hist_freqs[i] / freqs_sum;
     }
 }
-
-
-void  stochastic_matrix(double *x_probs, int dim, double **T){
+void stochastic_matrix(double *stationary_probability_vec, int dim, double **stochastic_mat, int num_iters){
     //    return T  dim x dim (same as p_vec) such that
+    //    T - stochastic matrix, x_probs - stationary_probability_vec
     //    1. \sum_j T_{i,j} = 1 for arbitrary row i
     //    2. xT = x
     //    3. 0 <= T_{i,j} <= 1,
     int i,j,k,l, iter;
     float  minimum, maximum, tmp, xji_ratio, delta1, delta2, sum;
+    double **T, *x_probs;
+    T = stochastic_mat;
+    x_probs = stationary_probability_vec;
     // initialize
     for(i = 0; i < dim; i++){
         for(j = 0; j < dim; j++){
@@ -83,7 +85,7 @@ void  stochastic_matrix(double *x_probs, int dim, double **T){
      *      max(-T_{i, k}, -1 +T_{i, l})       <= delta_1 <= min(T_{i, l}, 1-T_{i, k})
      *      -x_j/x_i*min(T_{j, l}, 1-T_{j, k}) <= delta_1 <= -x_j/x_i*max(-T_{j, k}, -1 +T_{j, l})      - OK
      */
-    for(iter = 0; iter < 16; iter++){
+    for(iter = 0; iter < num_iters; iter++){
         k = i = xorshift32() % dim;
         l = j = (i + xorshift32() % (dim - 1) + 1) % dim;     // random but different than i
         if ( (x_probs[i] == 0) || (x_probs[j] == 0))
@@ -130,4 +132,49 @@ void  stochastic_matrix(double *x_probs, int dim, double **T){
             printf("%f != %f, column = %i \n", sum, x_probs[i], i);
         }
     }
+}
+void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_values,
+                      int seq_size, uint32_t* output_chain_values, uint64_t scale_factor){
+
+    int index,i;
+    index = xorshift32() % dim;
+
+    for(i = 0; i < seq_size; i++){
+        output_chain_values[i] = state_values[index];
+        index = multinomial_lincom(stochastic_mat[index], dim, scale_factor);
+    }
+}
+
+
+void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char* output){
+
+    unsigned long long* Oi_freqs;
+    int dim, num_iters, i;
+    double *Oi_probs, **stochastic_mat;
+    uint64_t scale_factor;
+    uint32_t *output_chain_values, *state_values;
+
+    dim = 1 << value_bit_size;
+
+    stochastic_mat = allocate(dim);
+    Oi_freqs = (unsigned long long*) malloc(sizeof(unsigned long long)*dim);
+    Oi_probs = (double *) malloc(sizeof(double)*dim);
+    state_values = (uint32_t *) malloc(sizeof(uint32_t)*dim);
+    output_chain_values = (uint32_t *) malloc(sizeof(uint32_t)*chain_size);
+
+
+    Chi2_to_freqs(chi2stat, dim, chain_size, Oi_freqs);
+    print_array(Oi_freqs, dim);
+    histfreqs_to_probs(Oi_freqs, dim, chain_size, Oi_probs);
+
+    num_iters = 10*dim*dim;
+    stochastic_matrix(Oi_probs, dim, stochastic_mat, num_iters);
+
+    scale_factor = dim*100;
+    for(i = 0; i < dim; i++) {
+        output_chain_values[i] = i;
+    }
+    markov_chain_seq(stochastic_mat, dim, state_values, chain_size, output_chain_values, scale_factor);
+    concatenate(output_chain_values, chain_size, value_bit_size, output);
+
 }

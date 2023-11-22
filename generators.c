@@ -3,6 +3,7 @@
 //
 #include "generators.h"
 
+
 ///////////////////////////////////////// utils /////////////////////////////////////////
 void print_bitarray(unsigned char* array, unsigned long long out_byte_size){
     int i, j;
@@ -118,19 +119,19 @@ uint64_t rand_whole_range(uint64_t a, uint64_t b){
 }
 double rand_double_range(double a, double b, uint64_t scale_factor){
     // returns double values in [a, b)
-    // scale factor represents "granilarity" or "precision" of returned values
+    // scale factor represents "granularity" or "precision" of returned values
     int mod;
     double r;
     uint64_t A, B;
     if (scale_factor <= 0){
-        scale_factor = -1;
+        scale_factor = 1;
     }
     A = a*scale_factor;
     B = b*scale_factor;
-    r = (double)rand_range(0, B - A) / scale_factor;
+    r = 1.0 * rand_range(0, B - A) / scale_factor;
     return r + a;
 }
-int multinomial_lincom(float* probs, int size, uint64_t scale_factor){
+int multinomial_lincom(double* probs, int size, uint64_t scale_factor){
     // for array of probabilities (with sum = 1) of some events
     // return integer (index) of some event
     // the algorithm generate value r from [0, 1] and
@@ -240,6 +241,18 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
 }
 
 /////////////////////////////////////////  biased RNG /////////////////////////////////////////
+
+double chi2(double Ei, int num_bins, long long unsigned int *Oi){
+    int i;
+    double res;
+    res = 0;
+    for(i = 0; i < num_bins; i++){
+        res += (Ei - Oi[i])*(Ei - Oi[i]);
+    }
+    res = res / Ei;
+    return res;
+}
+
 void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, unsigned long long* Oi_freqs){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
@@ -284,8 +297,9 @@ void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, 
         return;
     }
     while(chi2_stat < chi2stat){
-        idx1 = xorshift64() % num_bins;
-        idx2 = xorshift64() % num_bins;
+        idx1 = xorshift32() % num_bins;
+        idx2 = xorshift32() % num_bins;
+//        printf("%i %i\n", idx1, idx2);
         current_value = ( Oi[idx1] - Ei )*(  Oi[idx1] - Ei )/Ei + ( Oi[idx2] - Ei )*(  Oi[idx2] - Ei )/Ei;
         tmp = ( Oi[idx1] - 1 - Ei )*(  Oi[idx1] - 1 - Ei )/Ei + ( Oi[idx2] + 1 - Ei )*(  Oi[idx2] + 1 - Ei )/Ei;
         if(tmp > current_value)
@@ -323,8 +337,10 @@ void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, 
     if (sum != n){
         printf("%llu != number of blocks", sum);
     }
-    //printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
+    printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
+
 }
+
 
 
 //float* array_from_interval(float a, float b, unsigned long long map_range, int (*RNG) (void), float* array, int size){

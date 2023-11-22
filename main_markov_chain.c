@@ -9,19 +9,19 @@
 
 
 #include "markov_chain_RNG.h"
+#include "generators.h"
 
-#define block_bit_size 3
-#define dim 4
 
 int main() {
-    double **T, Oi_probs[dim] = {0.1, 0.2, 0.6, 0.1}, req_chi2stat;
-    int  num_blocks;
-    unsigned long long Oi_freqs[dim];
-    num_blocks = 1000;
-    req_chi2stat = 10;
+    unsigned char output[3*100/8+4];
+    double chi2stat = 10;
+    int value_bit_size = 3;
+    int chain_size = 100;
 
-    T = allocate(dim);
-    stochastic_matrix(Oi_probs, dim, T);
+    seed_xorshift32(6);
+    Chi2_MC(chi2stat, value_bit_size, chain_size, output);
+
+
 
     return 0;
 }

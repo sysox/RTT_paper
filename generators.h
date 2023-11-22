@@ -27,7 +27,7 @@ uint32_t xorshift128();
 uint64_t rand_range(uint64_t a, uint64_t b);
 uint64_t rand_whole_range(uint64_t a, uint64_t b);
 double rand_double_range(double a, double b, uint64_t map_range);
-int multinomial_lincom(float* probs, int size, uint64_t scale_factor);
+int multinomial_lincom(double* probs, int size, uint64_t scale_factor);
 
 
 void concatenate(const uint32_t* values, unsigned long long num_values, int value_bit_size, unsigned char* output);
@@ -42,9 +42,6 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
 void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum,
                    unsigned long long* Oi_freqs);
 
-void gen_global_probs(double chi2stat, int hist_size, unsigned long long freq_sum,
-                      unsigned long long* Oi_freqs, double* Oi_probs);
-//void stochastic_matrix(float *p_vec, int dim, float **T);
 
 
 #endif //RTT_UNIFORMITY_TESTING_GENERATORS_H
