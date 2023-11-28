@@ -24,6 +24,7 @@ int main(){
     hist_size = 3;
 
     Chi2_to_freqs(chi2stat, hist_size, 100, freqs2);
-    multinomial(freqs2, values, hist_size, 8, output, 10, -1);
+//    multinomial(freqs2, values, hist_size, 8, output, 10, -1);
+    multinomial(freqs2, values, hist_size, 3, output, 10, -1);
     print_bitarray(output, 10);
 }
