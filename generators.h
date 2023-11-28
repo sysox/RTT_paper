@@ -11,10 +11,10 @@
 #include <string.h>
 #include <time.h>
 
-void print_bitarray(unsigned char* array, unsigned long long size);
-void print_array(uint32_t* array, unsigned long long size);
+void print_bitarray(unsigned char* array, uint32_t size);
+void print_array(uint32_t* array, uint32_t size);
 void swap(uint32_t* a, uint32_t* b);
-double chi2(double Ei, int num_bins, long long unsigned int *Oi);
+double chi2(double Ei, int num_bins, uint32_t *Oi);
 
 void seed_xorshift32(uint32_t seed);
 uint32_t xorshift32();
@@ -39,18 +39,18 @@ int multinomial_lincom(double* probs, int size, uint64_t scale_factor, uint64_t 
 
 // concatenation of bit-blocks of given size (value_bit_size) stored as LSB bits in values,
 // output should be allocated larger than necessary (+3 Bytes!!!)
-void concatenate(const uint32_t* values, unsigned long long num_values, int value_bit_size, unsigned char* output);
+void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size, unsigned char* output);
 
 // array of values (hist_values) with given frequencies (hist_freqs):  v_0, v_0, ..., v_1, ...v_1, ...
 void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_values,
-                        unsigned long long hist_size, uint32_t* output_values);
+                          uint32_t hist_size, uint32_t* output_values);
 
 
 // swaps iteratively values inside array
-void shuffling(uint32_t* values, unsigned long long num_values, unsigned long long num_swaps);
+void shuffling(uint32_t* values, uint32_t num_values, uint32_t num_swaps);
 
 // random sample from values (random indices - possible repeated values even if values are unique )
-void random_sample(const uint32_t* values, unsigned long long num_values, uint32_t* sample, int sample_size);
+void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample, int sample_size);
 
 //multinomial distribution - with exact frequencies of values  (shuffled with given number of swaps),
 // if num_swaps < 0 random sampling is selected (not exact frequencies, possibly repeated values )
@@ -59,7 +59,7 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
                  int value_bit_size, unsigned char* output, int num_values, int num_swaps);
 
 // generate histogram frequencies corresponding to chi2stat
-void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum,
-                   unsigned long long* Oi_freqs);
+void Chi2_to_freqs(double chi2stat, int hist_size, uint32_t freq_sum,
+                   uint32_t* Oi_freqs);
 
 #endif //RTT_UNIFORMITY_TESTING_GENERATORS_H

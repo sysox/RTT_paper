@@ -5,7 +5,7 @@
 
 
 ///////////////////////////////////////// utils /////////////////////////////////////////
-void print_bitarray(unsigned char* array, unsigned long long size){
+void print_bitarray(unsigned char* array, uint32_t size){
     int i, j;
     for(i = 0; i < size; i++){
         for(j = 0; j < 8; j++){
@@ -15,7 +15,7 @@ void print_bitarray(unsigned char* array, unsigned long long size){
     }
     printf("\n");
 }
-void print_array(uint32_t* array, unsigned long long size){
+void print_array(uint32_t* array, uint32_t size){
     int i, j;
     for(i = 0; i < size; i++){
         printf("%i ",array[i]);
@@ -140,7 +140,7 @@ int multinomial_lincom(double* probs, int size, uint64_t scale_factor, uint64_t 
     }
 }
 /////////////////////////////////////////  common generators(more random values) /////////////////////////////////////////
-void concatenate(const uint32_t* values, unsigned long long num_values, int value_bit_size, unsigned char* output){
+void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size, unsigned char* output){
     // takes 32 bit values and  concate them (value_bit_size least significant bits) to output
     // values[] = {2, 1, 5, 7, ... } value_bit_size = 3
     // will return bytes that represent stream of bits |010|100|101|111|...
@@ -163,7 +163,7 @@ void concatenate(const uint32_t* values, unsigned long long num_values, int valu
 //    print_bitarray(output, out_byte_size + 2);
 }
 void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_values,
-                        unsigned long long hist_size, uint32_t* output_values) {
+                          uint32_t hist_size, uint32_t* output_values) {
     // allocated memory (output) must be 3 bytes longer than necessary!!!
     // create clusters of repeated vallues
     // hist_freqs[] = {2, 3, 1, ...} hist_values[] = {0, 1, 2, ...}
@@ -183,9 +183,9 @@ void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_value
         }
     }
 }
-void shuffling(uint32_t* values, unsigned long long num_values, unsigned long long num_swaps){
+void shuffling(uint32_t* values, uint32_t num_values, uint32_t num_swaps){
     unsigned int idx1, idx2;
-    unsigned long long i;
+    uint32_t i;
     uint32_t tmp;
 
     //suffling - swaps
@@ -196,9 +196,9 @@ void shuffling(uint32_t* values, unsigned long long num_values, unsigned long lo
         swap(values + idx1, values + idx2);
     }
 }
-void random_sample(const uint32_t* values, unsigned long long num_values, uint32_t* sample, int sample_size){
+void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample, int sample_size){
     unsigned int idx;
-    unsigned long long i;
+    uint32_t i;
 
     for (i = 0; i < sample_size; i++) {
         idx = xorshift64() % num_values;                    // random block from
@@ -220,14 +220,16 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
     if (num_swaps > 0) {
         multinomial_clusters(hist_freqs, hist_values, hist_size, values);
         shuffling(values, num_values, num_swaps);
+        print_array(values, num_hist_values);
         concatenate(values, num_values, value_bit_size, output);
     } else{
         sample = (uint32_t*) malloc(num_values*sizeof(uint32_t));
         multinomial_clusters(hist_freqs, hist_values, hist_size, values);
         print_array(values, num_hist_values);
         random_sample(values, num_hist_values, sample, num_values);
+        print_array(sample, num_hist_values);
         concatenate(sample, num_values, value_bit_size, output);
-        free( (void*) sample);
+//        free( (void*) sample);
     }
 
     free((void *)values);
@@ -235,7 +237,7 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
 
 /////////////////////////////////////////  biased RNG /////////////////////////////////////////
 
-double chi2(double Ei, int num_bins, long long unsigned int *Oi){
+double chi2(double Ei, int num_bins, uint32_t *Oi){
     int i;
     double res;
     res = 0;
@@ -246,12 +248,12 @@ double chi2(double Ei, int num_bins, long long unsigned int *Oi){
     return res;
 }
 
-void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, unsigned long long* Oi_freqs){
+void Chi2_to_freqs(double chi2stat, int hist_size, uint32_t freq_sum, uint32_t* Oi_freqs){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
     int num_bins, i, floor_Ei, freq, idx1, idx2;
-    unsigned long long sum, n;
-    unsigned long long* Oi;
+    uint32_t sum, n;
+    uint32_t* Oi;
 
 
     num_bins = hist_size;
@@ -328,7 +330,7 @@ void Chi2_to_freqs(double chi2stat, int hist_size, unsigned long long freq_sum, 
 //        printf("%lli ", Oi[i]);
     }
     if (sum != n){
-        printf("%llu != number of blocks", sum);
+        printf("%u != number of blocks", sum);
     }
     printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
 
