@@ -2,17 +2,21 @@
 // Created by user on 09/11/2023.
 //
 
+
+#define  block_bit_size 3
+#define  hist_size (1 << block_bit_size)
+
 #include "generators.h"
 
 int main(){
-    int i, hist_size;
-    uint32_t freqs[3] = {2, 1, 3};
-    uint32_t values[3] = {3, 5, 4};
+    int i, num_blocks, num_bytes;
+    uint32_t freqs[hist_size];
+    uint32_t values[hist_size];
     uint32_t clusters[6];
     double chi2stat;
-    uint32_t freqs2[3];
-    unsigned char output[13];
-//    multinomial_clusters(freqs,values, 3, clusters);
+    unsigned char* output;
+
+    //    multinomial_clusters(freqs,values, 3, clusters);
 //    print_array(clusters, 6);
 //    concatenate(clusters, 6, 3, output);
 //    print_bitarray(output, 3);
@@ -21,10 +25,21 @@ int main(){
 //    multinomial(freqs, values, 3, 8, output, 10, 0);
 //    print_bitarray(output, 10);
     chi2stat = 2;
-    hist_size = 3;
+    num_blocks = 1000000;
+    num_bytes = num_blocks*block_bit_size / 8 + 3;
+    output = (unsigned char*)malloc(num_bytes);
+    for(i = 0; i < hist_size; i++)
+    {
+        values[i] = i;
+    }
 
-    Chi2_to_freqs(chi2stat, hist_size, 100, freqs2);
-//    multinomial(freqs2, values, hist_size, 8, output, 10, -1);
-    multinomial(freqs2, values, hist_size, 3, output, 10, -1);
-    print_bitarray(output, 10);
+    Chi2_to_freqs(chi2stat, hist_size, num_blocks, freqs);
+
+    //no clusters
+    multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, -1);
+
+    //exact frequencies but if num_swaps is small probably clusters of blocks
+    multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, num_blocks*0.1);
+
+
 }
