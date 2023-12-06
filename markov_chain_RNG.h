@@ -15,7 +15,7 @@ double** allocate(int dim);
 void print_vec(double *T, int dim);
 void print_mat(double **T, int dim);
 
-void histfreqs_to_probs(const long long int* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs);
+void histfreqs_to_probs(const uint32_t* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs);
 void stochastic_matrix(double *stationary_probability_vec, int dim, double **stochastic_mat, int num_iters);
 void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_values,
                       int seq_size, uint32_t* output_chain_values, uint64_t scale_factor);

@@ -33,7 +33,7 @@ void print_mat(double ** T, int dim){
     printf("\n");
     fflush(stdin);
 }
-void histfreqs_to_probs(const long long int* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs){
+void histfreqs_to_probs(const uint32_t* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs){
     int i;
     for(i = 0; i < hist_size; i++)
     {
@@ -107,7 +107,7 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
         tmp = fmax(-T[j][k], -1 + T[j][l]);
         maximum = fmin(maximum, xji_ratio*tmp);
 
-        if (maximum - minimum < 0.00001){
+        if (maximum - minimum < 0.0001){
             continue;
         }
         delta1 = rand_double_range(minimum, maximum, dim*10000, 0);
@@ -119,7 +119,7 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
         T[j][l] -= delta2;
     }
 
-    //    print_vec(x_probs, dim);
+//    print_vec(x_probs, dim);
 //    print_mat(T, dim);
 
     //test xT ~ x
@@ -145,19 +145,36 @@ void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_va
     }
 }
 
+double chi2_from_data(int num_bins, int num_values, uint32_t* values){
+    double chi2_stat;
+    uint32_t* Oi;
+    int i,idx, Ei;
+    Ei = 1.0*num_values/num_bins;
 
+    Oi = (uint32_t*) malloc(sizeof(uint32_t)*num_bins);
+    for(i = 0; i < num_values; i++){
+        idx = values[i];
+        Oi[idx]++;
+    }
+
+    chi2_stat = 0;
+    for (i = 0; i < num_bins; ++i) {
+        chi2_stat += ((double)Oi[i] - Ei)*((double)Oi[i] - Ei)/Ei;
+    }
+    return chi2_stat;
+}
 void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char* output){
 
-    unsigned long long* Oi_freqs;
+    uint32_t* Oi_freqs;
     int dim, num_iters, i;
-    double *Oi_probs, **stochastic_mat;
+    double *Oi_probs, **stochastic_mat, chi2_final;
     uint64_t scale_factor;
     uint32_t *output_chain_values, *state_values;
 
     dim = 1 << value_bit_size;
 
     stochastic_mat = allocate(dim);
-    Oi_freqs = (unsigned long long*) malloc(sizeof(unsigned long long)*dim);
+    Oi_freqs = (uint32_t*) malloc(sizeof(uint32_t)*dim);
     Oi_probs = (double *) malloc(sizeof(double)*dim);
     state_values = (uint32_t *) malloc(sizeof(uint32_t)*dim);
     output_chain_values = (uint32_t *) malloc(sizeof(uint32_t)*chain_size);
@@ -175,6 +192,10 @@ void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char*
     }
 
     markov_chain_seq(stochastic_mat, dim, state_values, chain_size, output_chain_values, scale_factor);
+
+    //test chi2
+    chi2_final = chi2_from_data(dim, chain_size,output_chain_values);
+    printf("chi2 of data generated using Markov process %lf", chi2_final);
     concatenate(output_chain_values, chain_size, value_bit_size, output);
 
 }
