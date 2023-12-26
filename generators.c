@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////// utils /////////////////////////////////////////
 void print_bitarray(unsigned char* array, uint32_t size){
-    int i, j;
+    unsigned int i, j;
     for(i = 0; i < size; i++){
         for(j = 0; j < 8; j++){
             printf("%i", (array[i] >> j) & 1 );
@@ -16,7 +16,7 @@ void print_bitarray(unsigned char* array, uint32_t size){
     printf("\n");
 }
 void print_array(uint32_t* array, uint32_t size){
-    int i;
+    unsigned int i;
     for(i = 0; i < size; i++){
         printf("%i ",array[i]);
     }
@@ -137,7 +137,7 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor,
     return 0;
 }
 /////////////////////////////////////////  common generators(more random values) /////////////////////////////////////////
-void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size, unsigned char* output){
+void concatenate(const uint32_t* values, uint32_t num_values, unsigned int value_bit_size, unsigned char* output){
     // takes 32 bit values and  concate them (value_bit_size least significant bits) to output
     // values[] = {2, 1, 5, 7, ... } value_bit_size = 3
     // will return bytes that represent stream of bits |010|100|101|111|...
@@ -153,7 +153,7 @@ void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size
         block_value_le = values[i];
         byte_offset = bits_written >> 3; // equivalent to bits_written / 8
         byte_shift = bits_written & 7;  // equivalent to bits_written % 8
-        write_ptr = (uint32_t*)(output + byte_offset);
+        write_ptr = (uint32_t*)(void*)(output + byte_offset);
         write_ptr[0] ^= block_value_le << byte_shift;
         bits_written += value_bit_size;
     }
@@ -166,7 +166,7 @@ void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_value
     // hist_freqs[] = {2, 3, 1, ...} hist_values[] = {0, 1, 2, ...}
     // will fill output_values with 0, 0, 1, 1, 1, 2, ...
 
-    int i, j, freq;
+    unsigned int i, j, freq;
     uint32_t *write_ptr;
     uint32_t block_value_le;
 
@@ -192,7 +192,7 @@ void shuffling(uint32_t* values, uint32_t num_values, uint32_t num_swaps){
         swap(values + idx1, values + idx2);
     }
 }
-void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample, int sample_size){
+void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample, unsigned int sample_size){
     unsigned int idx;
     uint32_t i;
 
@@ -202,9 +202,9 @@ void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample
     }
 }
 
-void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hist_size,
-                 int value_bit_size, unsigned char* output, int num_values, int num_swaps){
-    int i, num_hist_values;
+void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
+                 unsigned int value_bit_size, unsigned char* output, uint32_t num_values, uint32_t num_swaps){
+    unsigned int i, num_hist_values;
     uint32_t *values, *sample;
 
     num_hist_values = 0;
@@ -244,7 +244,7 @@ double chi2(double Ei, int num_bins, uint32_t *Oi){
     return res;
 }
 
-void Chi2_to_freqs(double chi2stat, int hist_size, uint32_t freq_sum, uint32_t* Oi_freqs){
+void Chi2_to_freqs(double chi2stat, unsigned int hist_size, uint32_t freq_sum, uint32_t* Oi_freqs){
     // (O_i - E_i)^2/ E_i = n(pi - p_expected)^2/p_expected
     double Ei, chi2_stat, current_value, tmp;
     int num_bins, i, floor_Ei, freq, idx1, idx2;

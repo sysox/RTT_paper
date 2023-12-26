@@ -41,20 +41,20 @@ void print_mat(double ** T, int dim){
     printf("\n");
     fflush(stdin);
 }
-void histfreqs_to_probs(const uint32_t* hist_freqs, int hist_size, uint32_t freqs_sum, double *Oi_probs){
-    int i;
+void histfreqs_to_probs(const uint32_t* hist_freqs, unsigned int hist_size, uint32_t freqs_sum, double *Oi_probs){
+    unsigned int i;
     for(i = 0; i < hist_size; i++)
     {
         Oi_probs[i] =  1.0 *hist_freqs[i] / freqs_sum;
     }
 }
-void stochastic_matrix(double *stationary_probability_vec, int dim, double **stochastic_mat, int num_iters){
+void stochastic_matrix(double *stationary_probability_vec, unsigned int dim, double **stochastic_mat, unsigned int num_iters){
     //    return T  dim x dim (same as p_vec) such that
     //    T - stochastic matrix, x_probs - stationary_probability_vec
     //    1. \sum_j T_{i,j} = 1 for arbitrary row i
     //    2. xT = x
     //    3. 0 <= T_{i,j} <= 1,
-    int i,j,k,l, iter;
+    unsigned int i,j,k,l, iter;
     float  minimum, maximum, tmp, xji_ratio, delta1, delta2, sum;
     double **T, *x_probs;
     T = stochastic_mat;
@@ -141,7 +141,7 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
         }
     }
 }
-void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_values,
+void markov_chain_seq(double **stochastic_mat, unsigned int dim, const uint32_t* state_values,
                       uint32_t seq_size, uint32_t* output_chain_values, uint64_t scale_factor){
 
     uint32_t index, i;
@@ -153,7 +153,7 @@ void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_va
     }
 }
 
-static double chi2_from_data(int num_bins, uint32_t num_values, uint32_t* values){
+static double chi2_from_data(unsigned int num_bins, uint32_t num_values, uint32_t* values){
     double chi2_stat;
     uint32_t* Oi;
     uint32_t i,idx, Ei;
@@ -173,7 +173,7 @@ static double chi2_from_data(int num_bins, uint32_t num_values, uint32_t* values
     return chi2_stat;
 }
 
-void Chi2_MC(double chi2stat, int value_bit_size, uint32_t chain_size, unsigned char* output){
+void Chi2_MC(double chi2stat, unsigned int value_bit_size, uint32_t chain_size, unsigned char* output){
 
     uint32_t* Oi_freqs;
     int dim, num_iters, i;
