@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     unsigned char *output;
     int i, block_bit_size, hist_size;
     char opt[129], val[129], *file, *end;
-    unsigned long long size_bytes, num_blocks, num_swaps, *Oi, seed;
+    unsigned long long size_bytes, num_blocks, num_swaps, seed;
     double chi2;
     FILE *fp;
 
@@ -42,8 +42,9 @@ int main(int argc, char *argv[]) {
             file = strdup(val);
         } else if (!strcmp(opt, "size")) {
             size_bytes = strtoull(val, &end, 10);
-            if (*end || errno == ERANGE)
+            if (*end || errno == ERANGE || size_bytes < 10 || size_bytes > 400)
                 return help(argv[0], "Invalid file size.");
+            size_bytes *= (1024 * 1024);
         } else if (!strcmp(opt, "blocksize")) {
             block_bit_size = strtol(val, &end, 10);
             if (*end || errno == ERANGE)
@@ -79,9 +80,8 @@ int main(int argc, char *argv[]) {
     num_blocks = (size_bytes * 8) / block_bit_size;
 
     output = malloc(size_bytes + 3);
-    Oi = malloc(hist_size * sizeof(*Oi));
 
-    if (!output || !Oi) {
+    if (!output) {
         printf("Cannot allocate memory.\n");
         return EXIT_FAILURE;
     }
@@ -120,7 +120,6 @@ int main(int argc, char *argv[]) {
 
     free(file);
     free(output);
-    free(Oi);
 
     return EXIT_SUCCESS;
 }

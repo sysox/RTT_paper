@@ -120,13 +120,13 @@ double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom){
     r = 1.0 * rand_range(0, B - A) / zoom;
     return r + a;
 }
-int multinomial_lincom(double* probs, int size, uint64_t scale_factor, uint64_t zoom){
+uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor, uint64_t zoom){
     // for array of probabilities (with sum = 1) of some events
     // return integer (index) of some event
     // the algorithm generate value r from [0, 1] and
     // returns index i such that sum_{j=0}^{i-1} <= r <= sum_{j=0}^{i}
 
-    int i = 0;
+    uint32_t i = 0;
     float r;
     r = rand_double_range(0, 1, scale_factor, zoom);
     for(i = 0; i < size; i++) {
@@ -141,7 +141,7 @@ void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size
     // takes 32 bit values and  concate them (value_bit_size least significant bits) to output
     // values[] = {2, 1, 5, 7, ... } value_bit_size = 3
     // will return bytes that represent stream of bits |010|100|101|111|...
-    int i, bits_written, byte_offset, byte_shift, out_byte_size;
+    uint32_t i, bits_written, byte_offset, byte_shift, out_byte_size;
     uint32_t *write_ptr;
     uint32_t block_value_le;
 
