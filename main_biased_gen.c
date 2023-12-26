@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
     // defaults
     file = NULL;
     block_bit_size = 1;
-    hist_size = 1 << block_bit_size;
     num_swaps = 0;
     chi2 = 1000.;
     size_bytes = 100 * 1024 *1024;
@@ -73,6 +72,8 @@ int main(int argc, char *argv[]) {
 
     if (block_bit_size < 1 || block_bit_size > 3)
         return help(argv[0], "Blocksize can be 1..3 only.");
+
+    hist_size = 1 << block_bit_size;
 
     printf("PARAMS: file %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu, seed %llu\n",
            file, size_bytes, block_bit_size, hist_size, chi2, num_swaps, seed);
