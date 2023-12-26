@@ -17,13 +17,13 @@ void swap(uint32_t* a, uint32_t* b);
 double chi2(double Ei, int num_bins, uint32_t *Oi);
 
 void seed_xorshift32(uint32_t seed);
-uint32_t xorshift32();
+uint32_t xorshift32(void);
 
 void seed_xorshift64(uint64_t seed);
-uint64_t xorshift64();
+uint64_t xorshift64(void);
 
 void seed_xorshift128(uint64_t seed);
-uint32_t xorshift128();
+uint32_t xorshift128(void);
 
 // returns integer from in [a, b) i.e. EXCEPT b
 uint64_t rand_range(uint64_t a, uint64_t b);

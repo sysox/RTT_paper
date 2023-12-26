@@ -39,7 +39,7 @@ void seed_xorshift32(uint32_t seed){
     }
     xorshift32_state = seed;
 }
-uint32_t xorshift32()
+uint32_t xorshift32(void)
 {
     /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
     xorshift32_state ^= xorshift32_state << 13;
@@ -56,7 +56,7 @@ void seed_xorshift64(uint64_t seed){
     }
     xorshift64_state = seed;
 }
-uint64_t xorshift64()
+uint64_t xorshift64(void)
 {
     xorshift64_state ^= xorshift64_state << 13;
     xorshift64_state ^= xorshift64_state >> 7;
@@ -75,7 +75,7 @@ void seed_xorshift128(uint64_t seed){
     xorshift128_state[2] = (seed >> 32);
 }
 /* The state must be initialized to non-zero */
-uint32_t xorshift128()
+uint32_t xorshift128(void)
 {
     /* Algorithm "xor128" from p. 5 of Marsaglia, "Xorshift RNGs" */
     uint32_t t;

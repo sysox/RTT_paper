@@ -6,7 +6,7 @@
 #include "generators.h"
 #include "markov_chain_RNG.h"
 
-double** double_array_alloc(int dim){
+static double** double_array_alloc(int dim){
     double **array;
     int i;
 
@@ -17,7 +17,7 @@ double** double_array_alloc(int dim){
     return array;
 }
 
-void double_array_free(double **array, int dim){
+static void double_array_free(double **array, int dim){
     for(int i = 0; i < dim; i++){
         free(array[i]);
     }
@@ -153,7 +153,7 @@ void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_va
     }
 }
 
-double chi2_from_data(int num_bins, uint32_t num_values, uint32_t* values){
+static double chi2_from_data(int num_bins, uint32_t num_values, uint32_t* values){
     double chi2_stat;
     uint32_t* Oi;
     uint32_t i,idx, Ei;
