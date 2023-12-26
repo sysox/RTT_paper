@@ -16,7 +16,7 @@ void print_bitarray(unsigned char* array, uint32_t size){
     printf("\n");
 }
 void print_array(uint32_t* array, uint32_t size){
-    int i, j;
+    int i;
     for(i = 0; i < size; i++){
         printf("%i ",array[i]);
     }
@@ -34,7 +34,6 @@ void swap(uint32_t* a, uint32_t* b){
 uint32_t xorshift32_state = 1;
 /* The state must be initialized to non-zero */
 void seed_xorshift32(uint32_t seed){
-    time_t t;
     if (seed == 0){
         seed = time(NULL);
     }
@@ -52,7 +51,6 @@ uint32_t xorshift32()
 uint64_t xorshift64_state = 1;
 /* The state must be initialized to non-zero ??? */
 void seed_xorshift64(uint64_t seed){
-    time_t t;
     if (seed == 0){
         seed = time(NULL);
     }
@@ -70,7 +68,6 @@ uint64_t xorshift64()
    of uint64_t or a uint128_t where supported */
 uint32_t xorshift128_state[4] = {1, 1, 1, 1 };
 void seed_xorshift128(uint64_t seed){
-    time_t t;
     if (seed == 0){
         seed = time(NULL);
     }
@@ -109,7 +106,6 @@ double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom){
     // pool_size - number of doubles possibly generated from a, b
     // zoom - integer is generated from zoomed interval and then values is transformed back (zoom out)
 
-    int mod;
     double r;
     uint64_t A, B;
 
@@ -145,7 +141,7 @@ void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size
     // takes 32 bit values and  concate them (value_bit_size least significant bits) to output
     // values[] = {2, 1, 5, 7, ... } value_bit_size = 3
     // will return bytes that represent stream of bits |010|100|101|111|...
-    int i, j, freq, bits_written, byte_offset, byte_shift, out_byte_size;
+    int i, bits_written, byte_offset, byte_shift, out_byte_size;
     uint32_t *write_ptr;
     uint32_t block_value_le;
 
@@ -187,7 +183,6 @@ void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_value
 void shuffling(uint32_t* values, uint32_t num_values, uint32_t num_swaps){
     unsigned int idx1, idx2;
     uint32_t i;
-    uint32_t tmp;
 
     //suffling - swaps
     for(i = 0; i < num_swaps; i++)

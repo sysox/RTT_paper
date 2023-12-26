@@ -25,7 +25,7 @@ void print_vec(double * T, int dim){
     fflush(stdin);
 }
 void print_mat(double ** T, int dim){
-    int i, j;
+    int i;
     printf("\n");
     for(i = 0; i < dim; i++){
         print_vec(T[i], dim);
