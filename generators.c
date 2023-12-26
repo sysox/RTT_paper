@@ -138,6 +138,7 @@ int multinomial_lincom(double* probs, int size, uint64_t scale_factor, uint64_t 
             return i;
         }
     }
+    return 0;
 }
 /////////////////////////////////////////  common generators(more random values) /////////////////////////////////////////
 void concatenate(const uint32_t* values, uint32_t num_values, int value_bit_size, unsigned char* output){
@@ -220,14 +221,14 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, int hi
     if (num_swaps > 0) {
         multinomial_clusters(hist_freqs, hist_values, hist_size, values);
         shuffling(values, num_values, num_swaps);
-        print_array(values, num_hist_values);
+//        print_array(values, num_hist_values);
         concatenate(values, num_values, value_bit_size, output);
     } else{
         sample = (uint32_t*) malloc(num_values*sizeof(uint32_t));
         multinomial_clusters(hist_freqs, hist_values, hist_size, values);
-        print_array(values, num_hist_values);
+//        print_array(values, num_hist_values);
         random_sample(values, num_hist_values, sample, num_values);
-        print_array(sample, num_hist_values);
+//        print_array(sample, num_hist_values);
         concatenate(sample, num_values, value_bit_size, output);
 //        free( (void*) sample);
     }
