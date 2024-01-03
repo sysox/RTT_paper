@@ -13,7 +13,7 @@
 static int help(const char *arg0, const char *err) {
     if (err)
         printf("%s\n\n", err);
-    printf("Use: %s --file=<output> [--size=<MBytes>] [--chi2=<num>] [--swaps=<num>] [--blocksize=<num>] [--seed=<num>]\n", arg0);
+    printf("Use: %s --file=<output> [--size=<MBytes>] [--chi2=<num>] [--swaps=<num>] [--blocksize=<num>] [--seed=<num>] [--type=multinomial|mc]\n", arg0);
     return EXIT_FAILURE;
 }
 
@@ -21,17 +21,20 @@ int main(int argc, char *argv[]) {
     unsigned char *output;
     int i, block_bit_size, hist_size;
     char opt[129], val[129], *file, *end;
+    enum { MULTINOMIAL, MC } type;
+    char *type_name[] = {"multinomial", "mc"};
     unsigned long long size_bytes, num_blocks, num_swaps, seed;
     double chi2;
     FILE *fp;
 
     // defaults
     file = NULL;
-    block_bit_size = 1;
+    block_bit_size = 8;
     num_swaps = 0;
     chi2 = 1000.;
     size_bytes = 100 * 1024 *1024;
     seed = 3;
+    type = MULTINOMIAL;
 
     for (i = 1; i < argc; i++) {
         if (sscanf(argv[i], "--%128[^=]=%128s", opt, val) != 2)
@@ -39,6 +42,13 @@ int main(int argc, char *argv[]) {
 
         if (!strcmp(opt, "file")) {
             file = strdup(val);
+        } else if (!strcmp(opt, "type")) {
+            if (!strcmp(val, "mc"))
+                type = MC;
+            else if (!strcmp(val, "multinomial"))
+                type = MULTINOMIAL;
+            else
+                return help(argv[0], "Invalid type.");
         } else if (!strcmp(opt, "size")) {
             size_bytes = strtoull(val, &end, 10);
             if (*end || errno == ERANGE || size_bytes < 10 || size_bytes > 400)
@@ -70,13 +80,13 @@ int main(int argc, char *argv[]) {
     if (!size_bytes)
         return help(argv[0], "File cannot be empty.");
 
-    if (block_bit_size < 1 || block_bit_size > 3)
-        return help(argv[0], "Blocksize can be 1..3 only.");
+    if (block_bit_size < 1 || block_bit_size > 16)
+        return help(argv[0], "Blocksize can be 1..16 only.");
 
     hist_size = 1 << block_bit_size;
 
-    printf("PARAMS: file %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu, seed %llu\n",
-           file, size_bytes, block_bit_size, hist_size, chi2, num_swaps, seed);
+    printf("PARAMS: file %s, type %s, size %llu, blocksize %i (bins %i), chi2 %f, swaps %llu, seed %llu\n",
+           file, type_name[type], size_bytes, block_bit_size, hist_size, chi2, num_swaps, seed);
 
     num_blocks = (size_bytes * 8) / block_bit_size;
 
@@ -89,24 +99,21 @@ int main(int argc, char *argv[]) {
 
     seed_xorshift32(seed);
 
-/** multinomial */
-/*
-    uint32_t freqs[hist_size];
-    uint32_t values[hist_size];
-    Chi2_to_freqs(chi2, hist_size, num_blocks, freqs);
+    if (type == MULTINOMIAL) {
+        uint32_t freqs[hist_size];
+        uint32_t values[hist_size];
+        Chi2_to_freqs(chi2, hist_size, num_blocks, freqs);
 
-    for(i = 0; i < hist_size; i++)
-        values[i] = i;
+        for(i = 0; i < hist_size; i++)
+            values[i] = i;
 
-    //no clusters
-    multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, -1);
-
-    //exact frequencies but if num_swaps is small probably clusters of blocks
-    //multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, num_blocks*0.1);
-*/
-
-
-    Chi2_MC(chi2, block_bit_size, num_blocks, output);
+        // num_swaps == 0 => no clusters
+        // or exact frequencies but if num_swaps is small probably clusters of blocks
+        multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, num_swaps);
+    } else if (type == MC) {
+        Chi2_MC(chi2, block_bit_size, num_blocks, output);
+    } else
+        abort();
 
     fp = fopen(file, "w");
     if (!fp) {
