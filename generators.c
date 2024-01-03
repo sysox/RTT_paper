@@ -134,7 +134,26 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor,
             return i;
         }
     }
+    return 0; //
+}
+
+
+
+uint32_t multinomial_lincom_exact(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum){
+    // return integer (index) of some event
+    // returns index i such that sum_{j=0}^{i-1} <= r <= sum_{j=0}^{i}
+
+    uint32_t i = 0;
+    float r;
+    r = xorshift32() % freq_sum; //integers from [0, freq_sum] = [0, freq1-1] + [freq1, freq1+freq2-1] +  ...
+
+    for(i = 0; i < hist_size; i++) {
+        if ( (r -= hist_freqs[i]) < 0){
+            return i;
+        }
+    }
     return 0;
+
 }
 /////////////////////////////////////////  common generators(more random values) /////////////////////////////////////////
 void concatenate(const uint32_t* values, uint32_t num_values, unsigned int value_bit_size, unsigned char* output){
@@ -202,6 +221,7 @@ void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample
     }
 }
 
+
 void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
                  unsigned int value_bit_size, unsigned char* output, uint32_t num_values, uint32_t num_swaps){
     unsigned int i, num_hist_values;
@@ -228,6 +248,87 @@ void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsign
         free(sample);
     }
 
+    free(values);
+}
+
+
+
+void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
+                       unsigned int value_bit_size, unsigned char* output, uint32_t num_values)
+                       {
+    uint32_t *values, *sample, freq_sum;
+    uint32_t i, idx, bits_written, byte_offset, byte_shift, out_byte_size;
+    uint32_t *write_ptr;
+    uint32_t block_value_le;
+
+    bits_written = 0;
+    out_byte_size = ceil(1.0*value_bit_size*num_values/8);
+    memset(output, 0, out_byte_size + 3);
+
+    freq_sum = 0;
+    for(i = 0; i < hist_size; i++){
+        freq_sum += hist_freqs[i];
+    }
+
+    for(i = 0; i < num_values; i++)
+    {
+        idx = multinomial_lincom_exact(hist_freqs, hist_size, freq_sum);
+        hist_freqs[idx]--;
+        if (hist_freqs[idx] < 0)
+        {
+            printf("frequency below 0, index=%i freq=%i", idx, hist_freqs[idx]);
+        }
+        freq_sum--;
+        block_value_le = values[idx];
+        byte_offset = bits_written >> 3; // equivalent to bits_written / 8
+        byte_shift = bits_written & 7;  // equivalent to bits_written % 8
+        write_ptr = (uint32_t*)(void*)(output + byte_offset);
+        write_ptr[0] ^= block_value_le << byte_shift;
+        bits_written += value_bit_size;
+    }
+
+    free(values);
+}
+
+
+
+
+
+void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
+                       unsigned int value_bit_size, unsigned char* output, uint32_t num_values)
+{
+    uint32_t *values, *sample, freq_sum;
+    uint32_t i, idx, bits_written, byte_offset, byte_shift, out_byte_size;
+    uint32_t *write_ptr;
+    uint32_t block_value_le, *hist_probs;
+
+    bits_written = 0;
+    out_byte_size = ceil(1.0*value_bit_size*num_values/8);
+    memset(output, 0, out_byte_size + 3);
+
+    freq_sum = 0;
+    for(i = 0; i < hist_size; i++){
+        freq_sum += hist_freqs[i];
+    }
+    hist_probs = (uint32_t*) malloc(sizeof(uint32_t)*hist_size);
+
+    for(i = 0; i < hist_size; i++)
+    {
+        hist_probs[i] =  1.0 *hist_freqs[i] / freq_sum;
+    }
+
+    for(i = 0; i < num_values; i++)
+    {
+        idx = multinomial_lincom(hist_probs, hist_size, 100000, 1);
+        block_value_le = values[idx];
+        byte_offset = bits_written >> 3; // equivalent to bits_written / 8
+        byte_shift = bits_written & 7;  // equivalent to bits_written % 8
+        write_ptr = (uint32_t*)(void*)(output + byte_offset);
+        write_ptr[0] ^= block_value_le << byte_shift;
+        bits_written += value_bit_size;
+    }
+
+    free(hist_probs);
     free(values);
 }
 
@@ -331,6 +432,8 @@ void Chi2_to_freqs(double chi2stat, unsigned int hist_size, uint32_t freq_sum, u
     printf("%f vs recomputed =%f\n\n", chi2_stat, chi2(Ei, num_bins, Oi));
 
 }
+
+
 
 
 

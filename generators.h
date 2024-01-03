@@ -31,7 +31,7 @@ uint64_t rand_range(uint64_t a, uint64_t b);
 // returns integer from in [a, b] i.e. INCLUDING b
 uint64_t rand_whole_range(uint64_t a, uint64_t b);
 
-// returns double in [a, b),  scale factor represents "granularity/precision/step" of returned values
+// returns double in [a, b), pool_size represents "granularity/precision/step" of returned values
 double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom);
 
 // generates index of some event according to probabilities (probs - probabilities of events)
@@ -42,8 +42,7 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor,
 void concatenate(const uint32_t* values, uint32_t num_values, unsigned int value_bit_size, unsigned char* output);
 
 // array of values (hist_values) with given frequencies (hist_freqs):  v_0, v_0, ..., v_1, ...v_1, ...
-void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_values,
-                          uint32_t hist_size, uint32_t* output_values);
+void multinomial_clusters(const uint32_t* hist_freqs, const uint32_t* hist_values, uint32_t hist_size, uint32_t* output_values);
 
 
 // swaps iteratively values inside array
@@ -55,8 +54,15 @@ void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample
 //multinomial distribution - with exact frequencies of values  (shuffled with given number of swaps),
 // if num_swaps < 0 random sampling is selected (not exact frequencies, possibly repeated values )
 // as results values (blocks of bits are  concatenated)
-void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
-                 unsigned int value_bit_size, unsigned char* output, uint32_t num_values, uint32_t num_swaps);
+void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size, unsigned int value_bit_size, unsigned char* output, uint32_t num_values, uint32_t num_swaps);
+
+
+uint32_t multinomial_lincom_exact(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum);
+void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
+                 unsigned int value_bit_size, unsigned char* output, uint32_t num_values);
+
+void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
+                           unsigned int value_bit_size, unsigned char* output, uint32_t num_values);
 
 // generate histogram frequencies corresponding to chi2stat
 void Chi2_to_freqs(double chi2stat, unsigned int hist_size, uint32_t freq_sum,
