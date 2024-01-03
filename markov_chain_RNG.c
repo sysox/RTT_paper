@@ -6,7 +6,7 @@
 #include "generators.h"
 #include "markov_chain_RNG.h"
 
-double** allocate(int dim){
+static double** double_array_alloc(int dim){
     double **array;
     int i;
 
@@ -16,6 +16,14 @@ double** allocate(int dim){
     }
     return array;
 }
+
+static void double_array_free(double **array, int dim){
+    for(int i = 0; i < dim; i++){
+        free(array[i]);
+    }
+    free(array);
+}
+
 void print_vec(double * T, int dim){
     int i;
     for(i = 0; i < dim; i++){
@@ -25,7 +33,7 @@ void print_vec(double * T, int dim){
     fflush(stdin);
 }
 void print_mat(double ** T, int dim){
-    int i, j;
+    int i;
     printf("\n");
     for(i = 0; i < dim; i++){
         print_vec(T[i], dim);
@@ -33,20 +41,20 @@ void print_mat(double ** T, int dim){
     printf("\n");
     fflush(stdin);
 }
-void histfreqs_to_probs(const uint32_t* hist_freqs, int hist_size, long long int freqs_sum, double *Oi_probs){
-    int i;
+void histfreqs_to_probs(const uint32_t* hist_freqs, unsigned int hist_size, uint32_t freqs_sum, double *Oi_probs){
+    unsigned int i;
     for(i = 0; i < hist_size; i++)
     {
         Oi_probs[i] =  1.0 *hist_freqs[i] / freqs_sum;
     }
 }
-void stochastic_matrix(double *stationary_probability_vec, int dim, double **stochastic_mat, int num_iters){
+void stochastic_matrix(double *stationary_probability_vec, unsigned int dim, double **stochastic_mat, unsigned int num_iters){
     //    return T  dim x dim (same as p_vec) such that
     //    T - stochastic matrix, x_probs - stationary_probability_vec
     //    1. \sum_j T_{i,j} = 1 for arbitrary row i
     //    2. xT = x
     //    3. 0 <= T_{i,j} <= 1,
-    int i,j,k,l, iter;
+    unsigned int i,j,k,l, iter;
     float  minimum, maximum, tmp, xji_ratio, delta1, delta2, sum;
     double **T, *x_probs;
     T = stochastic_mat;
@@ -133,10 +141,10 @@ void stochastic_matrix(double *stationary_probability_vec, int dim, double **sto
         }
     }
 }
-void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_values,
-                      int seq_size, uint32_t* output_chain_values, uint64_t scale_factor){
+void markov_chain_seq(double **stochastic_mat, unsigned int dim, const uint32_t* state_values,
+                      uint32_t seq_size, uint32_t* output_chain_values, uint64_t scale_factor){
 
-    int index,i;
+    uint32_t index, i;
     index = xorshift32() % dim;
 
     for(i = 0; i < seq_size; i++){
@@ -145,13 +153,13 @@ void markov_chain_seq(double **stochastic_mat, int dim, const uint32_t* state_va
     }
 }
 
-double chi2_from_data(int num_bins, int num_values, uint32_t* values){
+static double chi2_from_data(unsigned int num_bins, uint32_t num_values, uint32_t* values){
     double chi2_stat;
     uint32_t* Oi;
-    int i,idx, Ei;
+    uint32_t i,idx, Ei;
     Ei = 1.0*num_values/num_bins;
 
-    Oi = (uint32_t*) malloc(sizeof(uint32_t)*num_bins);
+    Oi = calloc(sizeof(uint32_t), num_bins);
     for(i = 0; i < num_values; i++){
         idx = values[i];
         Oi[idx]++;
@@ -161,9 +169,11 @@ double chi2_from_data(int num_bins, int num_values, uint32_t* values){
     for (i = 0; i < num_bins; ++i) {
         chi2_stat += ((double)Oi[i] - Ei)*((double)Oi[i] - Ei)/Ei;
     }
+    free(Oi);
     return chi2_stat;
 }
-void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char* output){
+
+void Chi2_MC(double chi2stat, unsigned int value_bit_size, uint32_t chain_size, unsigned char* output){
 
     uint32_t* Oi_freqs;
     int dim, num_iters, i;
@@ -173,12 +183,11 @@ void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char*
 
     dim = 1 << value_bit_size;
 
-    stochastic_mat = allocate(dim);
-    Oi_freqs = (uint32_t*) malloc(sizeof(uint32_t)*dim);
-    Oi_probs = (double *) malloc(sizeof(double)*dim);
-    state_values = (uint32_t *) malloc(sizeof(uint32_t)*dim);
-    output_chain_values = (uint32_t *) malloc(sizeof(uint32_t)*chain_size);
-
+    stochastic_mat = double_array_alloc(dim);
+    Oi_freqs = calloc(sizeof(uint32_t), dim);
+    Oi_probs = calloc(sizeof(double), dim);
+    state_values = calloc(sizeof(uint32_t), dim);
+    output_chain_values = calloc(sizeof(uint32_t), chain_size);
 
     Chi2_to_freqs(chi2stat, dim, chain_size, Oi_freqs);
     histfreqs_to_probs(Oi_freqs, dim, chain_size, Oi_probs);
@@ -195,7 +204,12 @@ void Chi2_MC(double chi2stat, int value_bit_size, int chain_size, unsigned char*
 
     //test chi2
     chi2_final = chi2_from_data(dim, chain_size,output_chain_values);
-    printf("chi2 of data generated using Markov process %lf", chi2_final);
+    printf("chi2 of data generated using Markov process %f\n", chi2_final);
     concatenate(output_chain_values, chain_size, value_bit_size, output);
 
+    double_array_free(stochastic_mat, dim);
+    free(Oi_freqs);
+    free(Oi_probs);
+    free(state_values);
+    free(output_chain_values);
 }
