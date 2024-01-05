@@ -35,7 +35,7 @@ uint64_t rand_whole_range(uint64_t a, uint64_t b);
 double rand_double_range(double a, double b, uint64_t pool_size);
 
 // generates index of some event according to probabilities (probs - probabilities of events)
-uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor);
+uint32_t multinomial_lincom_probs(double* probs, uint32_t size, uint64_t scale_factor);
 
 // concatenation of bit-blocks of given size (value_bit_size) stored as LSB bits in values,
 // output should be allocated larger than necessary (+3 Bytes!!!)
@@ -57,7 +57,7 @@ void random_sample(const uint32_t* values, uint32_t num_values, uint32_t* sample
 void multinomial(const uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size, unsigned int value_bit_size, unsigned char* output, uint32_t num_values, uint32_t num_swaps);
 
 
-uint32_t multinomial_lincom_exact(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum);
+uint32_t multinomial_lincom_freqs(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum);
 void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
                  unsigned int value_bit_size, unsigned char* output, uint32_t num_values);
 

@@ -116,7 +116,7 @@ double rand_double_range(double a, double b, uint64_t pool_size){
     r = 1.0 * rand_range(0, B - A)/x;
     return r + a;
 }
-uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t pool_size){
+uint32_t multinomial_lincom_probs(double* probs, uint32_t size, uint64_t pool_size){
     // for array of probabilities (with sum = 1) of some events
     // return integer (index) of some event
     // the algorithm generate value r from [0, 1] and
@@ -136,7 +136,7 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t pool_size){
 
 
 
-uint32_t multinomial_lincom_exact(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum){
+uint32_t multinomial_lincom_freqs(const uint32_t* hist_freqs, uint32_t hist_size, uint32_t freq_sum){
     // return integer (index) of some event
     // returns index i such that sum_{j=0}^{i-1} <= r <= sum_{j=0}^{i}
 
@@ -270,13 +270,12 @@ void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsign
 
     for(i = 0; i < num_values; i++)
     {
-        idx = multinomial_lincom_exact(hist_freqs, hist_size, freq_sum);
+        idx = multinomial_lincom_freqs(hist_freqs, hist_size, freq_sum);
         if (hist_freqs[idx] == 0)
         {
             printf("frequency below 0, index=%i freq=%i", idx, hist_freqs[idx]);
         }
         hist_freqs[idx]--;
-
         freq_sum--;
         block_value_le = hist_values[idx];
         byte_offset = bits_written >> 3; // equivalent to bits_written / 8
@@ -294,11 +293,12 @@ void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsign
 void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsigned int hist_size,
                        unsigned int value_bit_size, unsigned char* output, uint32_t num_values)
 {
+    // not exact vs exact version above - differs in non updating freqs only
+
     uint32_t freq_sum;
     uint32_t i, idx, bits_written, byte_offset, byte_shift, out_byte_size;
     uint32_t *write_ptr;
     uint32_t block_value_le;
-    double *hist_probs;
 
     bits_written = 0;
     out_byte_size = ceil(1.0*value_bit_size*num_values/8);
@@ -308,16 +308,10 @@ void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, un
     for(i = 0; i < hist_size; i++){
         freq_sum += hist_freqs[i];
     }
-    hist_probs = malloc(sizeof(double)*hist_size);
-
-    for(i = 0; i < hist_size; i++)
-    {
-        hist_probs[i] =  1.0 *hist_freqs[i] / freq_sum;
-    }
 
     for(i = 0; i < num_values; i++)
     {
-        idx = multinomial_lincom(hist_probs, hist_size, 100000); // TODO scale_factor, zoom ???
+        idx = multinomial_lincom_freqs(hist_freqs, hist_size, freq_sum);
         block_value_le = hist_values[idx];
         byte_offset = bits_written >> 3; // equivalent to bits_written / 8
         byte_shift = bits_written & 7;  // equivalent to bits_written % 8
@@ -325,7 +319,6 @@ void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, un
         write_ptr[0] ^= block_value_le << byte_shift;
         bits_written += value_bit_size;
     }
-    free(hist_probs);
 }
 
 /////////////////////////////////////////  biased RNG /////////////////////////////////////////

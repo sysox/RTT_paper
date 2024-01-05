@@ -118,7 +118,7 @@ void stochastic_matrix(double *stationary_probability_vec, unsigned int dim, dou
         if (maximum - minimum < 0.0001){
             continue;
         }
-        delta1 = rand_double_range(minimum, maximum, dim*10000, 0);
+        delta1 = rand_double_range(minimum, maximum, dim*10000);
         delta2 = delta1 / xji_ratio;
 
         T[i][k] += delta1;
@@ -149,7 +149,7 @@ void markov_chain_seq(double **stochastic_mat, unsigned int dim, const uint32_t*
 
     for(i = 0; i < seq_size; i++){
         output_chain_values[i] = state_values[index];
-        index = multinomial_lincom(stochastic_mat[index], dim, scale_factor, 0);
+        index = multinomial_lincom_probs(stochastic_mat[index], dim, scale_factor);
     }
 }
 
