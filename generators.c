@@ -123,14 +123,15 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t pool_size){
     // returns index i such that sum_{j=0}^{i-1} <= r <= sum_{j=0}^{i}
 
     uint32_t i = 0;
-    float r;
+    double r;
     r = rand_double_range(0, 1, pool_size);
     for(i = 0; i < size; i++) {
         if ( (r -= probs[i]) < 0){
             return i;
         }
     }
-    return 0; // TODO fix
+    abort();
+    return 0;
 }
 
 
