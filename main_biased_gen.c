@@ -13,7 +13,7 @@
 static int help(const char *arg0, const char *err) {
     if (err)
         printf("%s\n\n", err);
-    printf("Use: %s --file=<output> [--size=<MBytes>] [--chi2=<num>] [--swaps=<num>] [--blocksize=<num>] [--seed=<num>] [--type=multinomial|mc]\n", arg0);
+    printf("Use: %s --file=<output> [--size=<MBytes>] [--chi2=<num>] [--swaps=<num>] [--blocksize=<num>] [--seed=<num>] [--type=multinomial|mult_exact|mult_random|mc]\n", arg0);
     return EXIT_FAILURE;
 }
 
@@ -21,8 +21,8 @@ int main(int argc, char *argv[]) {
     unsigned char *output;
     int i, block_bit_size, hist_size;
     char opt[129], val[129], *file, *end;
-    enum { MULTINOMIAL, MC } type;
-    char *type_name[] = {"multinomial", "mc"};
+    enum { MULTINOMIAL, MULT_EXACT, MULT_RANDOM, MC } type;
+    char *type_name[] = {"multinomial", "multinomial_exact", "multinomial_random", "mc"};
     unsigned long long size_bytes, num_blocks, num_swaps, seed;
     double chi2;
     FILE *fp;
@@ -47,6 +47,10 @@ int main(int argc, char *argv[]) {
                 type = MC;
             else if (!strcmp(val, "multinomial"))
                 type = MULTINOMIAL;
+            else if (!strcmp(val, "mult_exact"))
+                type = MULT_EXACT;
+            else if (!strcmp(val, "mult_random"))
+                type = MULT_RANDOM;
             else
                 return help(argv[0], "Invalid type.");
         } else if (!strcmp(opt, "size")) {
@@ -99,7 +103,7 @@ int main(int argc, char *argv[]) {
 
     seed_xorshift32(seed);
 
-    if (type == MULTINOMIAL) {
+    if (type == MULTINOMIAL || type == MULT_EXACT || type == MULT_RANDOM) {
         uint32_t freqs[hist_size];
         uint32_t values[hist_size];
         Chi2_to_freqs(chi2, hist_size, num_blocks, freqs);
@@ -107,9 +111,15 @@ int main(int argc, char *argv[]) {
         for(i = 0; i < hist_size; i++)
             values[i] = i;
 
-        // num_swaps == 0 => no clusters
-        // or exact frequencies but if num_swaps is small probably clusters of blocks
-        multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, num_swaps);
+        if (type == MULTINOMIAL) {
+            // num_swaps == 0 => no clusters
+            // or exact frequencies but if num_swaps is small probably clusters of blocks
+            multinomial(freqs, values, hist_size, block_bit_size, output, num_blocks, num_swaps);
+        } else if (type == MULT_EXACT) {
+            multinomial_exact(freqs, values, hist_size, block_bit_size, output, num_blocks);
+        } else if (type == MULT_RANDOM) {
+            multinomial_not_exact(freqs, values, hist_size, block_bit_size, output, num_blocks);
+        }
     } else if (type == MC) {
         Chi2_MC(chi2, block_bit_size, num_blocks, output);
     } else
