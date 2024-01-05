@@ -6,7 +6,7 @@
 #define  block_bit_size 3
 #define  bins_count (1 << block_bit_size)
 
-#include "generators.h"
+#include  "generators.h"
 
 int main(){
     int i, num_blocks, num_bytes;
