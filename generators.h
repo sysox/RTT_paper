@@ -32,10 +32,10 @@ uint64_t rand_range(uint64_t a, uint64_t b);
 uint64_t rand_whole_range(uint64_t a, uint64_t b);
 
 // returns double in [a, b), pool_size represents "granularity/precision/step" of returned values
-double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom);
+double rand_double_range(double a, double b, uint64_t pool_size);
 
 // generates index of some event according to probabilities (probs - probabilities of events)
-uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor, uint64_t zoom);
+uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor);
 
 // concatenation of bit-blocks of given size (value_bit_size) stored as LSB bits in values,
 // output should be allocated larger than necessary (+3 Bytes!!!)

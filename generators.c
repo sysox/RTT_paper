@@ -101,26 +101,22 @@ uint64_t rand_whole_range(uint64_t a, uint64_t b){
     mod = b - a + 1;
     return xorshift64() % mod + a;
 }
-double rand_double_range(double a, double b, uint64_t pool_size, uint64_t zoom){
+double rand_double_range(double a, double b, uint64_t pool_size){
     // returns double values in [a, b)
     // pool_size - number of doubles possibly generated from a, b
-    // zoom - integer is generated from zoomed interval and then values is transformed back (zoom out)
-
-    double r;
+    double r, x;
     uint64_t A, B;
 
     // [a, b) is mapped to [A, B) with size poolsize i.e. B-1-A = pool_size
-    // B-1-A = b*zoom - a*zoom - 1 = pool_size      =>   zoom = (pool_size + 1)/ (b-a)
-    if (zoom <= 0){
-        zoom = (pool_size + 1)/ (b-a);
-    }
+    // B-1-A = b*x - a*x - 1 = pool_size      =>   x = (pool_size + 1)/ (b-a)
 
-    A = a*zoom;
-    B = b*zoom;
-    r = 1.0 * rand_range(0, B - A) / zoom;
+    x = 1.0*(pool_size+1) / (b-a);
+    A = a*x;
+    B = b*x;
+    r = 1.0 * rand_range(0, B - A)/x;
     return r + a;
 }
-uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor, uint64_t zoom){
+uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t pool_size){
     // for array of probabilities (with sum = 1) of some events
     // return integer (index) of some event
     // the algorithm generate value r from [0, 1] and
@@ -128,7 +124,7 @@ uint32_t multinomial_lincom(double* probs, uint32_t size, uint64_t scale_factor,
 
     uint32_t i = 0;
     float r;
-    r = rand_double_range(0, 1, scale_factor, zoom);
+    r = rand_double_range(0, 1, pool_size);
     for(i = 0; i < size; i++) {
         if ( (r -= probs[i]) < 0){
             return i;
@@ -319,7 +315,7 @@ void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, un
 
     for(i = 0; i < num_values; i++)
     {
-        idx = multinomial_lincom(hist_probs, hist_size, 100000, 1); // TODO scale_factor, zoom ???
+        idx = multinomial_lincom(hist_probs, hist_size, 100000); // TODO scale_factor, zoom ???
         block_value_le = hist_values[idx];
         byte_offset = bits_written >> 3; // equivalent to bits_written / 8
         byte_shift = bits_written & 7;  // equivalent to bits_written % 8
