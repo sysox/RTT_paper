@@ -271,11 +271,12 @@ void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsign
     for(i = 0; i < num_values; i++)
     {
         idx = multinomial_lincom_exact(hist_freqs, hist_size, freq_sum);
-        hist_freqs[idx]--;
-        if (hist_freqs[idx] < 0)
+        if (hist_freqs[idx] == 0)
         {
             printf("frequency below 0, index=%i freq=%i", idx, hist_freqs[idx]);
         }
+        hist_freqs[idx]--;
+
         freq_sum--;
         block_value_le = hist_values[idx];
         byte_offset = bits_written >> 3; // equivalent to bits_written / 8
