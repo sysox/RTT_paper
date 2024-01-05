@@ -25,7 +25,7 @@ int main(){
 //    multinomial(freqs, values, 3, 8, output, 10, 0);
 //    print_bitarray(output, 10);
     chi2stat = 2;
-    num_blocks = 1000000;
+    num_blocks = 10000;
     num_bytes = num_blocks*block_bit_size / 8 + 3;
     output = (unsigned char*)malloc(num_bytes);
     for(i = 0; i < bins_count; i++)
