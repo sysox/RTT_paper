@@ -1,7 +1,7 @@
 TARGET=gen
 TARGET2=test
 CPPFLAGS=
-CFLAGS=-O0 -g -Wall -D_GNU_SOURCE
+CFLAGS=-O3 -g -Wall -D_GNU_SOURCE
 LDLIBS=-lm
 CC=gcc
 
