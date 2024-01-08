@@ -68,4 +68,6 @@ void multinomial_not_exact(uint32_t* hist_freqs, const uint32_t* hist_values, un
 void Chi2_to_freqs(double chi2stat, unsigned int hist_size, uint32_t freq_sum,
                    uint32_t* Oi_freqs);
 
+double chi2_buffer(unsigned char* array, uint64_t array_num_bytes,  int block_bit_size);
+
 #endif //RTT_UNIFORMITY_TESTING_GENERATORS_H

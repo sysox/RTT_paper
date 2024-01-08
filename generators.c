@@ -284,6 +284,7 @@ void multinomial_exact(uint32_t* hist_freqs, const uint32_t* hist_values, unsign
         write_ptr[0] ^= block_value_le << byte_shift;
         bits_written += value_bit_size;
     }
+
 }
 
 
@@ -423,8 +424,41 @@ void Chi2_to_freqs(double chi2stat, unsigned int hist_size, uint32_t freq_sum, u
 }
 
 
+double chi2_buffer(unsigned char* array, uint64_t array_num_bytes,  int block_bit_size){
+    // frekvence
+    int i, num_blocks, byte_shift, num_bins, idx;
+    uint32_t* block_32bit, mask, *Oi;
+    uint64_t bits_read, byte_offset;
+    double chi2_stat, Ei;
 
+    num_blocks = array_num_bytes*8/block_bit_size;
+    mask = (1 << block_bit_size) - 1;
 
+    num_bins = 1 << block_bit_size;
+    Ei = 1.0*num_blocks/num_bins;
+
+    Oi = calloc(sizeof(uint32_t), num_bins);
+
+    bits_read = 0;
+    for(i = 0; i < num_blocks; i++) {
+        byte_offset = bits_read / 8;
+        block_32bit = (uint32_t *) (void *) (array + byte_offset);
+        byte_shift = bits_read & 7;  // equivalent to bits_written % 8
+        idx = (block_32bit[0] >> byte_shift) & mask;
+        Oi[idx]++;
+        bits_read += block_bit_size;
+    }
+//    for(i =0 ; i < num_bins; i++){
+//        printf("%u:%u \n",i, Oi[i]);
+//    }
+//    printf("\n");
+
+    chi2_stat = 0;
+    for (i = 0; i < num_bins; ++i) {
+        chi2_stat += ((double)Oi[i] - Ei)*((double)Oi[i] - Ei)/Ei;
+    }
+    return chi2_stat;
+}
 
 //float* array_from_interval(float a, float b, unsigned long long map_range, int (*RNG) (void), float* array, int size){
 //    int mod, i;
