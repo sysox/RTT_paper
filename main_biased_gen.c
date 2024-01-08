@@ -125,6 +125,8 @@ int main(int argc, char *argv[]) {
     } else
         abort();
 
+    printf("Output chi2: %f\n", chi2_buffer(output, size_bytes, block_bit_size));
+
     fp = fopen(file, "w");
     if (!fp) {
         printf("File %s cannot be created.\n", file);
