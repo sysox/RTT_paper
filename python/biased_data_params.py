@@ -14,7 +14,11 @@ alphas.update(alphas_small)
 alphas.update(alphas_large)
 alphas[0.5] = chi2_critical_value(0.5)
 
+
 # num_swaps = [round(num_blocks*i/10) for i in range(11)]
 
-for alpha, chi2  in alphas.items():
-    print(f"alpha={alpha}:chi2={round(chi2, 2)} ")
+for alpha, chi2_value  in alphas.items():
+    print(f"alpha={alpha}:chi2={round(chi2_value, 2)} ")
+
+for chi2_value in [50, 100, 150]:
+    print(f"alpha={chi2.sf(alpha, df=255, loc=0, scale=1)}:chi2={round(chi2_value, 2)} ")
