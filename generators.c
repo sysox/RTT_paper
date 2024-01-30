@@ -141,11 +141,11 @@ uint32_t multinomial_lincom_freqs(const uint32_t* hist_freqs, uint32_t hist_size
     // returns index i such that sum_{j=0}^{i-1} <= r <= sum_{j=0}^{i}
 
     uint32_t i = 0;
-    double r;
-    r = xorshift32() % freq_sum; //integers from [0, freq_sum] = [0, freq1-1] + [freq1, freq1+freq2-1] +  ...
+    int64_t r;
+    r = xorshift64() % freq_sum; //integers from [0, freq_sum] = [0, freq1-1] + [freq1, freq1+freq2-1] +  ...
 
     for(i = 0; i < hist_size; i++) {
-        if ( (r -= (double)hist_freqs[i]) < 0){
+        if ( (r -= hist_freqs[i]) < 0){
             return i;
         }
     }

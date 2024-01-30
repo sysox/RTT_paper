@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
     }
 
     seed_xorshift32(seed);
+    seed_xorshift64(seed);
 
     if (type == MULTINOMIAL || type == MULT_EXACT || type == MULT_RANDOM) {
         uint32_t freqs[hist_size];
@@ -126,6 +127,11 @@ int main(int argc, char *argv[]) {
         abort();
 
     printf("Output chi2: %f\n", chi2_buffer(output, size_bytes, block_bit_size));
+
+    //printf("Output chi2 [1/4]: %f\n\n",  chi2_buffer(output,                  size_bytes/4, block_bit_size));
+    //printf("Output chi2 [2/4]: %f\n\n",  chi2_buffer(output+size_bytes/4,     size_bytes/4, block_bit_size));
+    //printf("Output chi2 [3/4]: %f\n\n",  chi2_buffer(output+2*(size_bytes/4), size_bytes/4, block_bit_size));
+    //printf("Output chi2 [4/4]: %f\n\n",  chi2_buffer(output+3*(size_bytes/4), size_bytes/4, block_bit_size));
 
     fp = fopen(file, "w");
     if (!fp) {
